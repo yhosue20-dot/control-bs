@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Control Bs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════
+   VARIABLES & RESET
+══════════════════════════════════════════════ */
+:root {
+  --bg:        #0d1117;
+  --bg2:       #161b22;
+  --bg3:       #21262d;
+  --border:    #30363d;
+  --text:      #e6edf3;
+  --dim:       #7d8590;
+  --gold:      #d29922;
+  --gold-bg:   #2a1f08;
+  --blue:      #1f6feb;
+  --blue-bg:   #0d1f38;
+  --green:     #2ea043;
+  --green-bg:  #0d2818;
+  --red:       #da3633;
+  --red-bg:    #2d1216;
+  --radius:    8px;
+  --font:      'Sora', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+input,button,select{font-family:var(--font)}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+/* ══════════════════════════════════════════════
+TOPBAR
+══════════════════════════════════════════════ */
+#topbar{
+background:var(–bg2);border-bottom:1px solid var(–border);
+padding:10px 14px;display:flex;align-items:flex-start;gap:10px;
+flex-wrap:wrap;position:sticky;top:0;z-index:100;
+}
+.logo{font-size:16px;font-weight:700;color:var(–gold);letter-spacing:-0.5px;white-space:nowrap;padding-top:3px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(–dim);display:inline-block;margin-right:4px;transition:background .3s}
+.sync-dot.ok{background:var(–green)}
+.sync-dot.loading{background:var(–gold);animation:pulse 1s infinite}
+.sync-dot.error{background:var(–red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.view-toggle{display:flex;gap:2px;background:var(–bg3);border-radius:8px;padding:2px}
+.vtab{padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-family:var(–font);
+font-size:11px;font-weight:600;background:transparent;color:var(–dim);transition:all .15s}
+.vtab:hover{color:var(–text)}
+.vtab.active{background:var(–gold);color:#000}
+
+#day-tabs{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+.day-tab-wrap{display:flex;flex-direction:column;gap:2px}
+.day-tab{padding:4px 10px;border-radius:6px;border:1px solid var(–border);
+background:transparent;color:var(–dim);cursor:pointer;font-size:11px;font-weight:500;transition:all .15s}
+.day-tab:hover{border-color:var(–gold);color:var(–gold)}
+.day-tab.active{background:var(–gold);border-color:var(–gold);color:#000;font-weight:700}
+.day-label-input{width:100%;background:var(–bg3);border:1px solid var(–gold);
+border-radius:4px;color:var(–gold);padding:2px 6px;font-family:var(–mono);
+font-size:10px;text-align:center;outline:none}
+.day-label-input::placeholder{color:var(–dim)}
+
+.topbar-btns{display:flex;gap:5px;flex-wrap:wrap}
+.btn{padding:5px 11px;border-radius:6px;border:none;cursor:pointer;
+font-family:var(–font);font-size:11px;font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-gold{background:var(–gold);color:#000}.btn-gold:hover{filter:brightness(1.15)}
+.btn-blue{background:var(–blue);color:#fff}.btn-blue:hover{filter:brightness(1.2)}
+.btn-green{background:var(–green);color:#fff}.btn-green:hover{filter:brightness(1.2)}
+.btn-ghost{background:transparent;color:var(–dim);border:1px solid var(–border)}
+.btn-ghost:hover{color:var(–text);border-color:var(–text)}
+.btn-danger{background:var(–red-bg);color:var(–red);border:1px solid var(–red)}
+
+/* ══════════════════════════════════════════════
+MAIN LAYOUT
+══════════════════════════════════════════════ */
+#main{padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+
+/* ══════════════════════════════════════════════
+CARDS
+══════════════════════════════════════════════ */
+.card{background:var(–bg2);border:1px solid var(–border);border-radius:var(–radius);overflow:hidden}
+.card-header{padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;
+display:flex;align-items:center;justify-content:space-between}
+.hdr-saldos {background:#2a1f08;color:var(–gold);border-bottom:1px solid #4a3520}
+.hdr-ventas {background:var(–blue-bg);color:#79b8ff;border-bottom:1px solid #1f3f5f}
+.hdr-compras{background:var(–green-bg);color:#7ee787;border-bottom:1px solid #1a4025}
+.hdr-resumen{background:#1a1a2e;color:#a0aeff;border-bottom:1px solid #2a2a4e}
+.hdr-mes    {background:#1a1a2e;color:#a0aeff;border-bottom:1px solid #2a2a4e}
+
+.prom-wrap{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:400}
+.prom-inp{width:90px;background:var(–bg3);border:1px solid var(–border);border-radius:4px;
+color:var(–gold);padding:2px 6px;font-family:var(–mono);font-size:11px;text-align:center;outline:none}
+.prom-inp:focus{border-color:var(–gold)}
+
+/* ══════════════════════════════════════════════
+TABLES
+══════════════════════════════════════════════ */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(–bg3);color:var(–dim);font-weight:600;padding:6px 7px;
+text-align:center;border-bottom:1px solid var(–border);font-size:10px;letter-spacing:.4px;white-space:nowrap}
+tbody td{padding:4px 5px;text-align:center;border-bottom:1px solid #1c2128}
+tbody tr.alt td{background:rgba(255,255,255,.018)}
+tfoot td{background:var(–bg3);font-weight:700;padding:6px 7px;font-family:var(–mono);
+font-size:11px;border-top:2px solid var(–border);text-align:center}
+.td-l{text-align:left!important}
+.td-mono{font-family:var(–mono);font-size:11px}
+.td-gold{color:var(–gold);font-family:var(–mono);font-size:11px;font-weight:600}
+.td-green{color:#7ee787;font-family:var(–mono);font-size:11px}
+.td-blue{color:#79b8ff;font-family:var(–mono);font-size:11px}
+.td-red{color:var(–red)}
+.td-dim{color:var(–dim);font-family:var(–mono);font-size:11px}
+.neg{color:var(–red)!important}
+
+.cod-badge{display:inline-block;padding:1px 6px;border-radius:4px;
+background:var(–gold-bg);color:var(–gold);font-weight:700;font-size:10px;font-family:var(–mono)}
+.day-chip{display:inline-block;padding:2px 8px;border-radius:4px;
+background:var(–bg3);color:var(–gold);font-family:var(–mono);font-size:10px;font-weight:600}
+
+/* ══════════════════════════════════════════════
+INPUTS IN TABLES
+══════════════════════════════════════════════ */
+.ni,.ti{width:100%;background:var(–bg3);border:1px solid var(–border);border-radius:4px;
+color:var(–text);padding:3px 5px;font-family:var(–mono);font-size:11px;outline:none}
+.ni{text-align:center}.ti{text-align:left}
+.ni:focus,.ti:focus{border-color:var(–gold)}
+.ni-cod{width:50px;text-align:center}
+.del-btn{background:transparent;border:none;color:var(–red);cursor:pointer;font-size:15px;padding:0 3px;line-height:1}
+.del-btn:hover{color:#ff6b6b}
+.add-row-btn{display:block;width:100%;padding:7px;background:transparent;
+border:none;border-top:1px dashed var(–border);color:var(–dim);cursor:pointer;font-size:11px;transition:all .15s}
+.add-row-btn:hover{color:var(–gold);background:rgba(210,153,34,.05)}
+
+/* ══════════════════════════════════════════════
+MOV GRID (ventas + compras side by side on desktop)
+══════════════════════════════════════════════ */
+.mov-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:860px){.mov-grid{grid-template-columns:1fr}}
+
+/* ══════════════════════════════════════════════
+RESUMEN DÍA
+══════════════════════════════════════════════ */
+.res-grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+@media(max-width:580px){.res-grid{grid-template-columns:1fr}}
+.res-row{display:flex;justify-content:space-between;align-items:center;
+padding:6px 10px;border-radius:6px;font-size:11px}
+.res-neutral{background:var(–bg3)}
+.res-compra {background:var(–green-bg)}
+.res-venta  {background:var(–blue-bg)}
+.res-win    {background:#0d2818;border:1px solid var(–green)}
+.res-loss   {background:var(–red-bg);border:1px solid var(–red)}
+.res-label  {color:var(–dim);font-size:10px}
+.res-val    {font-weight:700;font-family:var(–mono);font-size:12px}
+.res-win  .res-val{color:#7ee787;font-size:14px}
+.res-loss .res-val{color:var(–red);font-size:14px}
+
+/* ══════════════════════════════════════════════
+RESUMEN MES
+══════════════════════════════════════════════ */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi-card{padding:14px 16px;border-radius:10px;border:1px solid var(–border)}
+.kpi-green {background:#0d2818;border-color:var(–green)}
+.kpi-blue  {background:var(–blue-bg);border-color:var(–blue)}
+.kpi-gold  {background:var(–gold-bg);border-color:var(–gold)}
+.kpi-neut  {background:var(–bg2)}
+.kpi-label {font-size:9px;font-weight:700;letter-spacing:.8px;color:var(–dim);margin-bottom:4px}
+.kpi-val   {font-family:var(–mono);font-size:15px;font-weight:700}
+.kpi-green .kpi-val{color:#7ee787}
+.kpi-blue  .kpi-val{color:#79b8ff}
+.kpi-gold  .kpi-val{color:var(–gold)}
+.kpi-sub   {font-family:var(–mono);font-size:11px;color:var(–dim);margin-top:2px}
+
+/* ══════════════════════════════════════════════
+MODAL
+══════════════════════════════════════════════ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
+display:flex;align-items:center;justify-content:center}
+.modal{background:var(–bg2);border:1px solid var(–border);border-radius:12px;
+padding:20px;width:min(460px,95vw);max-height:85vh;overflow-y:auto}
+.modal h3{color:var(–gold);margin-bottom:14px;font-size:14px}
+.acc-list{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.acc-item{display:flex;align-items:center;justify-content:space-between;
+padding:6px 10px;background:var(–bg3);border-radius:6px}
+.acc-item span{font-family:var(–mono);font-size:11px}
+.acc-add{display:flex;gap:6px;margin-bottom:10px}
+.acc-add input{flex:1;background:var(–bg3);border:1px solid var(–border);border-radius:6px;
+color:var(–text);padding:6px 10px;font-size:12px;outline:none}
+.acc-add input:focus{border-color:var(–gold)}
+
+/* ══════════════════════════════════════════════
+CONFIG MODAL
+══════════════════════════════════════════════ */
+.cfg-field{margin-bottom:12px}
+.cfg-label{font-size:10px;color:var(–dim);letter-spacing:.5px;margin-bottom:4px;font-weight:600}
+.cfg-input{width:100%;background:var(–bg3);border:1px solid var(–border);border-radius:6px;
+color:var(–text);padding:7px 10px;font-family:var(–mono);font-size:11px;outline:none}
+.cfg-input:focus{border-color:var(–gold)}
+.cfg-note{font-size:10px;color:var(–dim);margin-top:4px;line-height:1.5}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(–bg3);border:1px solid var(–border);
+border-radius:8px;padding:10px 16px;font-size:12px;z-index:300;transition:opacity .3s;max-width:280px}
+.toast.hide{opacity:0;pointer-events:none}
+.toast.ok  {border-color:var(–green);color:#7ee787}
+.row-done td { background:rgba(46,160,67,.13)!important; opacity:.75; }
+.row-done .chk-btn { color:#7ee787; }
+.chk-btn {
+background:transparent; border:1px solid var(–border); border-radius:4px;
+color:var(–dim); cursor:pointer; font-size:13px; padding:1px 4px;
+transition:all .15s; min-width:26px;
+}
+.chk-btn:hover { border-color:var(–green); color:#7ee787; }
+.toast.err {border-color:var(–red);color:var(–red)}
+
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;
+height:60vh;gap:12px;color:var(–dim)}
+.spinner{width:32px;height:32px;border:3px solid var(–border);border-top-color:var(–gold);
+border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#cfg-url-hint{font-size:10px;color:var(–dim);margin-top:6px;line-height:1.6}
+</style>
+
+</head>
+<body>
+
+<!-- TOPBAR -->
+
+<div id="topbar">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span class="logo">₿s Control</span>
+    <div class="view-toggle">
+      <button class="vtab active" onclick="setView('dia')" id="vtab-dia">📅 Día</button>
+      <button class="vtab" onclick="setView('mes')" id="vtab-mes">📊 Mes</button>
+    </div>
+    <span style="font-size:10px;color:var(--dim)" id="sync-status">
+      <span class="sync-dot" id="sync-dot"></span><span id="sync-text">Sin configurar</span>
+    </span>
+  </div>
+  <div id="day-tabs"></div>
+  <div class="topbar-btns">
+    <button class="btn btn-gold" onclick="addDay()">+ Día</button>
+    <button class="btn btn-blue" onclick="exportExcel()">⬇ Excel</button>
+    <button class="btn btn-green" onclick="syncNow()" id="btn-sync">☁ Sincronizar</button>
+    <button class="btn btn-ghost" onclick="openAccMgr()">⚙ Cuentas</button>
+    <button class="btn btn-ghost" onclick="openConfig()">🔗 Sheets</button>
+    <button class="btn btn-danger" onclick="resetMonth()">↺ Mes</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+
+<div id="main"></div>
+
+<!-- TOAST -->
+
+<div class="toast hide" id="toast"></div>
+
+<!-- MODAL CUENTAS -->
+
+<div class="overlay" id="modal-acc" style="display:none" onclick="closeAccMgr()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>⚙ Gestión de Cuentas</h3>
+    <div class="acc-list" id="acc-list"></div>
+    <div class="acc-add">
+      <input id="new-cod" placeholder="COD" style="max-width:65px"
+        oninput="this.value=this.value.toUpperCase()"/>
+      <input id="new-nom" placeholder="Nombre de la cuenta"
+        oninput="this.value=this.value.toUpperCase()"/>
+      <button class="btn btn-gold" onclick="addAccount()">+ Agregar</button>
+    </div>
+    <button class="btn btn-ghost" style="width:100%" onclick="closeAccMgr()">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIG SHEETS -->
+
+<div class="overlay" id="modal-cfg" style="display:none" onclick="closeCfg()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>🔗 Conectar con Google Sheets</h3>
+    <div class="cfg-field">
+      <div class="cfg-label">URL DEL APPS SCRIPT (Web App URL)</div>
+      <input class="cfg-input" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec"/>
+      <div id="cfg-url-hint">
+        Pega aquí la URL que obtienes al publicar el Apps Script como aplicación web.<br>
+        👉 Ver instrucciones en el archivo <strong>INSTRUCCIONES.txt</strong> que viene junto a esta app.
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-green" onclick="saveCfg()">💾 Guardar y probar</button>
+      <button class="btn btn-ghost" onclick="closeCfg()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const DEFAULT_ACCOUNTS = [
+  {cod:"VY",nombre:"VENEZUELA YHOSUE"},{cod:"BY",nombre:"BANESCO YOSMEL"},
+  {cod:"PH",nombre:"PROVINCIAL HUGO"}, {cod:"BD",nombre:"BANESCO DEISY"},
+  {cod:"VP",nombre:"VENEZUELA PAPA"},  {cod:"DN",nombre:"DANIEL"},
+  {cod:"DR",nombre:"DIRECTOS"},        {cod:"VM",nombre:"VNZLA MAMA"},
+  {cod:"PP",nombre:"PAPA PROVINCIAL"},
+];
+
+let state = {
+  accounts: DEFAULT_ACCOUNTS,
+  days: [],
+  currentDay: 0,
+  scriptUrl: "",
+};
+let currentView = "dia";
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+const n = v => parseFloat(v)||0;
+const fmt = (v,d=2) => v===undefined||v===null||v===""?"":Number(v).toLocaleString("es-CO",{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtCOP = v => (v||v===0)?"$ "+Number(v).toLocaleString("es-CO",{minimumFractionDigits:0,maximumFractionDigits:0}):"";
+
+function todayStr(){
+  const d=new Date();
+  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+}
+
+function emptyDay(prevDay=null){
+  const promPrev = prevDay ? calcPromCompraReal(prevDay) : 0;
+  return {
+    label: todayStr(),
+    saldos: state.accounts.map(a=>({
+      cod:a.cod,
+      inicioBs: prevDay?(prevDay.saldos.find(s=>s.cod===a.cod)?.stock??0):0,
+      promedio: promPrev,
+    })),
+    ventas:  [{nombre:"",cod:"",tasa:"",bs:"",done:false}],
+    compras: [{nombre:"",cod:"",tasa:"",bs:"",done:false}],
+  };
+}
+
+function calcStock(s,ventas,compras){
+  const c=compras.filter(x=>x.cod===s.cod).reduce((a,x)=>a+n(x.bs),0);
+  const v=ventas.filter(x=>x.cod===s.cod).reduce((a,x)=>a+n(x.bs),0);
+  return n(s.inicioBs)+c-v;
+}
+
+function calcPromCompraReal(day){
+  const totInicio = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
+  const promInicio = n(day.saldos[0]?.promedio);
+  const sumBsC  = day.compras.reduce((a,c)=>a+n(c.bs),0);
+  const sumCopC = day.compras.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+  const denom = totInicio+sumBsC;
+  return denom===0?promInicio:(totInicio*promInicio+sumCopC)/denom;
+}
+
+function calcResumen(day){
+  const inicioBs   = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
+  const promInicio = n(day.saldos[0]?.promedio);
+  const inicioPesos= inicioBs*promInicio;
+  const bsComp  = day.compras.reduce((a,c)=>a+n(c.bs),0);
+  const copComp = day.compras.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+  const bsVend  = day.ventas.reduce((a,v)=>a+n(v.bs),0);
+  const copVend = day.ventas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+  const promCompra = calcPromCompraReal(day);
+  const promVenta  = bsVend>0?copVend/bsVend:0;
+  const utilidad   = (promVenta-promCompra)*bsVend;
+  const quedaBs    = inicioBs+bsComp-bsVend;
+  const valorPesos = quedaBs*promCompra;
+  return {inicioBs,inicioPesos,bsComp,copComp,bsVend,copVend,promCompra,promVenta,utilidad,quedaBs,valorPesos};
+}
+
+// ══════════════════════════════════════════════
+//  STORAGE (local)
+// ══════════════════════════════════════════════
+function saveLocal(){
+  try{ localStorage.setItem("ctrlbs_state", JSON.stringify(state)); }catch{}
+}
+function loadLocal(){
+  try{
+    const s = localStorage.getItem("ctrlbs_state");
+    if(s){ state = JSON.parse(s); return true; }
+  }catch{}
+  return false;
+}
+
+// ══════════════════════════════════════════════
+//  GOOGLE SHEETS SYNC
+// ══════════════════════════════════════════════
+function setSyncStatus(status, text){
+  const dot = document.getElementById("sync-dot");
+  const txt = document.getElementById("sync-text");
+  dot.className = "sync-dot " + status;
+  txt.textContent = text;
+}
+
+async function syncLoad(){
+  if(!state.scriptUrl) return;
+  setSyncStatus("loading","Cargando...");
+  try{
+    const url = state.scriptUrl + "?action=load";
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.ok){
+      state.accounts  = data.accounts  || state.accounts;
+      state.days      = data.days      || state.days;
+      state.currentDay= data.currentDay|| 0;
+      saveLocal();
+      setSyncStatus("ok","Sincronizado ✓");
+      render();
+      showToast("Datos cargados desde Google Sheets","ok");
+    } else {
+      setSyncStatus("error","Error al cargar");
+      showToast("Error: "+data.error,"err");
+    }
+  }catch(e){
+    setSyncStatus("error","Sin conexión");
+  }
+}
+
+async function syncSave(){
+  if(!state.scriptUrl) return;
+  setSyncStatus("loading","Guardando...");
+  try{
+    const res = await fetch(state.scriptUrl, {
+      method:"POST",
+      body: JSON.stringify({action:"save", state:{
+        accounts: state.accounts,
+        days: state.days,
+        currentDay: state.currentDay,
+      }})
+    });
+    const data = await res.json();
+    if(data.ok){
+      setSyncStatus("ok","Guardado ✓");
+    } else {
+      setSyncStatus("error","Error al guardar");
+    }
+  }catch(e){
+    setSyncStatus("error","Sin conexión");
+  }
+}
+
+async function syncNow(){
+  if(!state.scriptUrl){
+    openConfig();
+    return;
+  }
+  await syncLoad();
+}
+
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
+function openConfig(){
+  document.getElementById("cfg-url").value = state.scriptUrl||"";
+  document.getElementById("modal-cfg").style.display="flex";
+}
+function closeCfg(){
+  document.getElementById("modal-cfg").style.display="none";
+}
+async function saveCfg(){
+  const url = document.getElementById("cfg-url").value.trim();
+  if(!url){ showToast("Ingresa la URL del script","err"); return; }
+  state.scriptUrl = url;
+  saveLocal();
+  closeCfg();
+  await syncLoad();
+}
+
+// ══════════════════════════════════════════════
+//  DAY MANAGEMENT
+// ══════════════════════════════════════════════
+function addDay(){
+  const prev = state.days.length>0?state.days[state.days.length-1]:null;
+  state.days.push(emptyDay(prev));
+  state.currentDay = state.days.length-1;
+  saveLocal(); syncSave(); render();
+}
+
+function setCurrentDay(i){
+  state.currentDay = i;
+  saveLocal(); render();
+}
+
+function updateDayLabel(i, val){
+  state.days[i].label = val;
+  saveLocal(); syncSave();
+  // update tab text only
+  const tabs = document.querySelectorAll(".day-tab");
+  if(tabs[i]) tabs[i].textContent = val||`Día ${String(i+1).padStart(2,"0")}`;
+}
+
+function resetMonth(){
+  if(!confirm("¿Resetear el mes? Se borrarán todos los datos.")) return;
+  state.days = [emptyDay()];
+  state.currentDay = 0;
+  saveLocal(); syncSave(); render();
+}
+
+// ══════════════════════════════════════════════
+//  SALDOS
+// ══════════════════════════════════════════════
+function updatePromedio(val){
+  const day = state.days[state.currentDay];
+  day.saldos = day.saldos.map(s=>({...s, promedio: val}));
+  saveLocal(); syncSave(); renderResumen();
+  updateSaldoCalcs();
+}
+
+function updateInicio(idx, val){
+  state.days[state.currentDay].saldos[idx].inicioBs = val;
+  saveLocal(); syncSave();
+  updateSaldoCalcs();
+  renderResumen();
+}
+
+function updateSaldoCalcs(){
+  const day = state.days[state.currentDay];
+  day.saldos.forEach((s,i)=>{
+    const pesos = n(s.inicioBs)*n(s.promedio);
+    const compra = day.compras.filter(c=>c.cod===s.cod).reduce((a,c)=>a+n(c.bs),0);
+    const venta  = day.ventas.filter(v=>v.cod===s.cod).reduce((a,v)=>a+n(v.bs),0);
+    const stock  = n(s.inicioBs)+compra-venta;
+    const row = document.getElementById(`saldo-row-${i}`);
+    if(!row) return;
+    row.querySelector(".td-pesos").textContent   = fmt(pesos,0);
+    row.querySelector(".td-compra").textContent  = fmt(compra,2);
+    row.querySelector(".td-venta").textContent   = fmt(venta,2);
+    const stEl = row.querySelector(".td-stock");
+    stEl.textContent = fmt(stock,2);
+    stEl.className = "td-stock td-gold" + (stock<0?" neg":"");
+  });
+  // totals
+  const totInicio = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
+  const totPesos  = day.saldos.reduce((a,s)=>a+n(s.inicioBs)*n(s.promedio),0);
+  const totCompra = day.compras.reduce((a,c)=>a+n(c.bs),0);
+  const totVenta  = day.ventas.reduce((a,v)=>a+n(v.bs),0);
+  const totStock  = day.saldos.reduce((a,s)=>a+calcStock(s,day.ventas,day.compras),0);
+  const trow = document.getElementById("saldo-tfoot");
+  if(trow){
+    trow.cells[1].textContent = fmt(totInicio,2);
+    trow.cells[2].textContent = fmt(totPesos,0);
+    trow.cells[3].textContent = fmt(totCompra,2);
+    trow.cells[4].textContent = fmt(totVenta,2);
+    trow.cells[5].textContent = fmt(totStock,2);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  MOVIMIENTOS (ventas / compras)
+// ══════════════════════════════════════════════
+function addMovRow(tipo){
+  const day = state.days[state.currentDay];
+  day[tipo].push({nombre:"",cod:"",tasa:"",bs:"",done:false});
+  saveLocal();
+  renderMovTable(tipo);
+  renderResumen();
+  updateSaldoCalcs();
+}
+
+function delMovRow(tipo, idx){
+  const day = state.days[state.currentDay];
+  day[tipo].splice(idx,1);
+  saveLocal(); syncSave();
+  renderMovTable(tipo);
+  renderResumen();
+  updateSaldoCalcs();
+}
+
+function toggleDone(tipo, idx){
+  const day = state.days[state.currentDay];
+  day[tipo][idx].done = !day[tipo][idx].done;
+  saveLocal(); syncSave();
+  const row = document.getElementById(`mov-row-${tipo}-${idx}`);
+  if(row) row.classList.toggle("row-done", day[tipo][idx].done);
+  const cb = document.getElementById(`chk-${tipo}-${idx}`);
+  if(cb) cb.textContent = day[tipo][idx].done ? "✅" : "☐";
+}
+
+function updateMov(tipo, idx, field, val){
+  const day = state.days[state.currentDay];
+  day[tipo][idx][field] = val;
+  // auto-fill cuenta display
+  if(field==="cod"){
+    const acc = state.accounts.find(a=>a.cod===val.toUpperCase());
+    const cuentaEl = document.getElementById(`${tipo}-cuenta-${idx}`);
+    if(cuentaEl) cuentaEl.textContent = acc?.nombre||"";
+  }
+  // recalc COP cell
+  const copEl = document.getElementById(`${tipo}-cop-${idx}`);
+  if(copEl){
+    const r = day[tipo][idx];
+    copEl.textContent = n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):"";
+  }
+  saveLocal(); syncSave();
+  renderMovTotals(tipo);
+  renderResumen();
+  updateSaldoCalcs();
+}
+
+function renderMovTotals(tipo){
+  const day = state.days[state.currentDay];
+  const rows = day[tipo];
+  const totBs  = rows.reduce((a,r)=>a+n(r.bs),0);
+  const totCop = rows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
+  const tfBs  = document.getElementById(`${tipo}-tot-bs`);
+  const tfCop = document.getElementById(`${tipo}-tot-cop`);
+  if(tfBs)  tfBs.textContent  = fmt(totBs,2);
+  if(tfCop) tfCop.textContent = fmt(totCop,0);
+}
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
+function setView(v){
+  currentView = v;
+  document.getElementById("vtab-dia").classList.toggle("active",v==="dia");
+  document.getElementById("vtab-mes").classList.toggle("active",v==="mes");
+  document.getElementById("day-tabs").style.display = v==="dia"?"flex":"none";
+  renderMain();
+}
+
+function render(){
+  renderTabs();
+  renderMain();
+}
+
+function renderTabs(){
+  const container = document.getElementById("day-tabs");
+  container.innerHTML = "";
+  state.days.forEach((d,i)=>{
+    const wrap = document.createElement("div");
+    wrap.className = "day-tab-wrap";
+    const btn = document.createElement("button");
+    btn.className = "day-tab" + (i===state.currentDay?" active":"");
+    btn.textContent = d.label||`Día ${String(i+1).padStart(2,"0")}`;
+    btn.onclick = ()=>setCurrentDay(i);
+    wrap.appendChild(btn);
+    if(i===state.currentDay){
+      const inp = document.createElement("input");
+      inp.className = "day-label-input";
+      inp.value = d.label||"";
+      inp.placeholder = "ej: 12/05 o Lunes";
+      inp.oninput = e=>updateDayLabel(i,e.target.value);
+      wrap.appendChild(inp);
+    }
+    container.appendChild(wrap);
+  });
+}
+
+function renderMain(){
+  const main = document.getElementById("main");
+  if(currentView==="mes"){
+    main.innerHTML = renderMesHTML();
+    return;
+  }
+  if(state.days.length===0){ main.innerHTML="<p style='color:var(--dim);padding:20px'>Sin días</p>"; return; }
+  const day = state.days[state.currentDay];
+  main.innerHTML = `
+    ${renderSaldosHTML(day)}
+    <div class="mov-grid">
+      ${renderMovHTML(day,"ventas")}
+      ${renderMovHTML(day,"compras")}
+    </div>
+    ${renderResumenHTML(day)}
+  `;
+}
+
+// ── SALDOS ──
+function renderSaldosHTML(day){
+  const prom = n(day.saldos[0]?.promedio);
+  let rows = "";
+  day.saldos.forEach((s,i)=>{
+    const acc    = state.accounts.find(a=>a.cod===s.cod);
+    const pesos  = n(s.inicioBs)*prom;
+    const compra = day.compras.filter(c=>c.cod===s.cod).reduce((a,c)=>a+n(c.bs),0);
+    const venta  = day.ventas.filter(v=>v.cod===s.cod).reduce((a,v)=>a+n(v.bs),0);
+    const stock  = n(s.inicioBs)+compra-venta;
+    rows += `<tr class="${i%2===0?"alt":""}" id="saldo-row-${i}">
+      <td><span class="cod-badge">${s.cod}</span></td>
+      <td class="td-l" style="font-size:11px">${acc?.nombre||""}</td>
+      <td><input class="ni" type="number" value="${n(s.inicioBs)}" oninput="updateInicio(${i},this.value)"/></td>
+      <td class="td-pesos td-dim">${fmt(pesos,0)}</td>
+      <td class="td-compra td-green">${fmt(compra,2)}</td>
+      <td class="td-venta td-blue">${fmt(venta,2)}</td>
+      <td class="td-stock td-gold${stock<0?" neg":""}">${fmt(stock,2)}</td>
+    </tr>`;
+  });
+  const totInicio = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
+  const totPesos  = day.saldos.reduce((a,s)=>a+n(s.inicioBs)*prom,0);
+  const totCompra = day.compras.reduce((a,c)=>a+n(c.bs),0);
+  const totVenta  = day.ventas.reduce((a,v)=>a+n(v.bs),0);
+  const totStock  = day.saldos.reduce((a,s)=>a+calcStock(s,day.ventas,day.compras),0);
+  return `<div class="card">
+    <div class="card-header hdr-saldos">
+      <span>💰 SALDOS</span>
+      <div class="prom-wrap">
+        Promedio inicial:&nbsp;<strong>${fmt(prom,4)}</strong>&nbsp;
+        <input class="prom-inp" type="number" value="${prom}" oninput="updatePromedio(this.value)"/>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>COD</th><th>CUENTA</th><th>INICIO Bs</th><th>PESOS</th><th>COMPRA</th><th>VENTA</th><th>STOCK</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr id="saldo-tfoot"><td colspan="2">TOTAL</td>
+        <td>${fmt(totInicio,2)}</td><td>${fmt(totPesos,0)}</td>
+        <td class="td-green">${fmt(totCompra,2)}</td><td class="td-blue">${fmt(totVenta,2)}</td>
+        <td class="td-gold">${fmt(totStock,2)}</td>
+      </tr></tfoot>
+    </table></div>
+  </div>`;
+}
+
+// ── MOV TABLE ──
+function renderMovHTML(day, tipo){
+  const isV   = tipo==="ventas";
+  const hdr   = isV?"📤 VENTAS  (salida de Bs)":"📥 COMPRAS  (entrada de Bs)";
+  const cls   = isV?"hdr-ventas":"hdr-compras";
+  const rows  = day[tipo];
+  const totBs = rows.reduce((a,r)=>a+n(r.bs),0);
+  const totCop= rows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
+  let trows="";
+  rows.forEach((r,i)=>{
+    const acc = state.accounts.find(a=>a.cod===r.cod);
+    const cop = n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):"";
+    trows+=`<tr class="${i%2===0?"alt":""} ${r.done?"row-done":""}" id="mov-row-${tipo}-${i}">
+      <td><button class="chk-btn" id="chk-${tipo}-${i}" onclick="toggleDone('${tipo}',${i})">${r.done?"✅":"☐"}</button></td>
+      <td><input class="ti" value="${r.nombre}" placeholder="Nombre"
+        oninput="updateMov('${tipo}',${i},'nombre',this.value)"/></td>
+      <td><input class="ni ni-cod" value="${r.cod}" placeholder="COD"
+        oninput="updateMov('${tipo}',${i},'cod',this.value.toUpperCase())" list="cods-list"/></td>
+      <td class="td-l" id="${tipo}-cuenta-${i}" style="font-size:10px;color:var(--dim)">${acc?.nombre||""}</td>
+      <td><input class="ni" type="number" value="${r.tasa}" placeholder="tasa"
+        oninput="updateMov('${tipo}',${i},'tasa',this.value)"/></td>
+      <td><input class="ni" type="number" value="${r.bs}" placeholder="bs"
+        oninput="updateMov('${tipo}',${i},'bs',this.value)"/></td>
+      <td class="td-dim td-mono" id="${tipo}-cop-${i}">${cop}</td>
+      <td><button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button></td>
+    </tr>`;
+  });
+  return `<div class="card">
+    <div class="card-header ${cls}">${hdr}</div>
+    <datalist id="cods-list">${state.accounts.map(a=>`<option value="${a.cod}">`).join("")}</datalist>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th></th><th>NOMBRE</th><th>COD</th><th>CUENTA</th><th>TASA</th><th>Bs</th><th>PESOS</th><th></th></tr></thead>
+      <tbody>${trows}</tbody>
+      <tfoot><tr><td colspan="5">TOTAL</td>
+        <td id="${tipo}-tot-bs">${fmt(totBs,2)}</td>
+        <td id="${tipo}-tot-cop">${fmt(totCop,0)}</td>
+        <td></td>
+      </tr></tfoot>
+    </table></div>
+    <button class="add-row-btn" onclick="addMovRow('${tipo}')">+ Agregar fila</button>
+  </div>`;
+}
+
+// ── RESUMEN DÍA ──
+function renderResumen(){
+  const day = state.days[state.currentDay];
+  const el  = document.getElementById("resumen-card");
+  if(el) el.outerHTML = renderResumenHTML(day);
+}
+
+function renderResumenHTML(day){
+  const r = calcResumen(day);
+  const rows=[
+    ["INICIO EN Bs",           fmt(r.inicioBs,2),    "neutral"],
+    ["INICIO EN PESOS",        fmtCOP(r.inicioPesos), "neutral"],
+    ["Bs COMPRADOS",           fmt(r.bsComp,2),       "compra"],
+    ["Bs COMPRADOS EN PESOS",  fmtCOP(r.copComp),     "compra"],
+    ["Bs VENDIDOS",            fmt(r.bsVend,2),       "venta"],
+    ["Bs VENDIDOS EN PESOS",   fmtCOP(r.copVend),     "venta"],
+    ["PROMEDIO COMPRA REAL",   fmt(r.promCompra,4),   "compra"],
+    ["PROMEDIO VENTA",         fmt(r.promVenta,4),    "venta"],
+    ["UTILIDAD (COP)",         fmtCOP(r.utilidad),    r.utilidad>=0?"win":"loss"],
+    ["QUEDA EN Bs",            fmt(r.quedaBs,2),      "neutral"],
+    ["VALOR EN PESOS (costo)", fmtCOP(r.valorPesos),  "neutral"],
+  ];
+  return `<div class="card" id="resumen-card">
+    <div class="card-header hdr-resumen">📊 RESUMEN DEL DÍA</div>
+    <div class="res-grid">
+      ${rows.map(([l,v,t])=>`<div class="res-row res-${t}">
+        <span class="res-label">${l}</span>
+        <span class="res-val">${v||"—"}</span>
+      </div>`).join("")}
+    </div>
+  </div>`;
+}
+
+// ── RESUMEN MES ──
+function renderMesHTML(){
+  const rows = state.days.map((day,i)=>({...calcResumen(day), label:day.label||`Día ${String(i+1).padStart(2,"0")}`}));
+  const totBC = rows.reduce((a,r)=>a+r.bsComp,0);
+  const totCC = rows.reduce((a,r)=>a+r.copComp,0);
+  const totBV = rows.reduce((a,r)=>a+r.bsVend,0);
+  const totCV = rows.reduce((a,r)=>a+r.copVend,0);
+  const totU  = rows.reduce((a,r)=>a+r.utilidad,0);
+  const pCA   = rows.filter(r=>r.promCompra>0);
+  const pVA   = rows.filter(r=>r.promVenta>0);
+  const avgPC = pCA.length?pCA.reduce((a,r)=>a+r.promCompra,0)/pCA.length:0;
+  const avgPV = pVA.length?pVA.reduce((a,r)=>a+r.promVenta,0)/pVA.length:0;
+  const last  = rows[rows.length-1]||{};
+
+  const kpis=`<div class="kpi-grid">
+    <div class="kpi-card kpi-green">
+      <div class="kpi-label">UTILIDAD TOTAL MES</div>
+      <div class="kpi-val">${fmtCOP(totU)}</div>
+    </div>
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-label">Bs VENDIDOS (mes)</div>
+      <div class="kpi-val">${fmt(totBV,2)}</div>
+      <div class="kpi-sub">${fmtCOP(totCV)}</div>
+    </div>
+    <div class="kpi-card kpi-gold">
+      <div class="kpi-label">Bs COMPRADOS (mes)</div>
+      <div class="kpi-val">${fmt(totBC,2)}</div>
+      <div class="kpi-sub">${fmtCOP(totCC)}</div>
+    </div>
+    <div class="kpi-card kpi-neut">
+      <div class="kpi-label">PROM COMPRA PROM</div>
+      <div class="kpi-val">${fmt(avgPC,4)}</div>
+      <div class="kpi-label" style="margin-top:6px">PROM VENTA PROM</div>
+      <div class="kpi-val">${fmt(avgPV,4)}</div>
+    </div>
+    <div class="kpi-card kpi-neut">
+      <div class="kpi-label">QUEDA EN Bs (último día)</div>
+      <div class="kpi-val">${fmt(last.quedaBs,2)}</div>
+      <div class="kpi-label" style="margin-top:6px">VALOR EN PESOS</div>
+      <div class="kpi-val">${fmtCOP(last.valorPesos)}</div>
+    </div>
+  </div>`;
+
+  let trows="";
+  rows.forEach((r,i)=>{
+    trows+=`<tr class="${i%2===0?"alt":""}">
+      <td><span class="day-chip">${r.label}</span></td>
+      <td class="td-dim">${fmt(r.inicioBs,2)}</td>
+      <td class="td-green">${fmt(r.bsComp,2)}</td>
+      <td class="td-green">${fmt(r.copComp,0)}</td>
+      <td class="td-blue">${fmt(r.bsVend,2)}</td>
+      <td class="td-blue">${fmt(r.copVend,0)}</td>
+      <td class="td-dim">${fmt(r.promCompra,4)}</td>
+      <td class="td-dim">${fmt(r.promVenta,4)}</td>
+      <td class="${r.utilidad>=0?"td-green":"td-red"}" style="font-weight:700">${fmtCOP(r.utilidad)}</td>
+      <td class="td-gold">${fmt(r.quedaBs,2)}</td>
+    </tr>`;
+  });
+
+  return `${kpis}
+  <div class="card">
+    <div class="card-header hdr-mes" style="justify-content:space-between">
+      <span>📋 DETALLE POR DÍA</span>
+      <button class="btn btn-blue" style="font-size:11px" onclick="exportExcel()">⬇ Descargar Excel completo</button>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>DÍA</th><th>INICIO Bs</th><th>Bs COMP</th><th>COP COMP</th>
+        <th>Bs VEND</th><th>COP VEND</th><th>PROM COMPRA</th><th>PROM VENTA</th>
+        <th>UTILIDAD</th><th>QUEDA Bs</th>
+      </tr></thead>
+      <tbody>${trows}</tbody>
+      <tfoot><tr>
+        <td>TOTAL</td><td>—</td>
+        <td class="td-green">${fmt(totBC,2)}</td><td class="td-green">${fmt(totCC,0)}</td>
+        <td class="td-blue">${fmt(totBV,2)}</td><td class="td-blue">${fmt(totCV,0)}</td>
+        <td>${fmt(avgPC,4)}</td><td>${fmt(avgPV,4)}</td>
+        <td style="font-weight:700;color:${totU>=0?"#7ee787":"var(--red)"}">${fmtCOP(totU)}</td>
+        <td class="td-gold">${fmt(last.quedaBs,2)}</td>
+      </tr></tfoot>
+    </table></div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  ACCOUNT MANAGER
+// ══════════════════════════════════════════════
+function openAccMgr(){
+  const list = document.getElementById("acc-list");
+  list.innerHTML = state.accounts.map(a=>`
+    <div class="acc-item">
+      <span><strong style="color:var(--gold)">${a.cod}</strong> — ${a.nombre}</span>
+      <button class="del-btn" onclick="removeAccount('${a.cod}')">×</button>
+    </div>`).join("");
+  document.getElementById("modal-acc").style.display="flex";
+}
+function closeAccMgr(){ document.getElementById("modal-acc").style.display="none"; }
+
+function addAccount(){
+  const cod = document.getElementById("new-cod").value.trim().toUpperCase();
+  const nom = document.getElementById("new-nom").value.trim().toUpperCase();
+  if(!cod||!nom){ showToast("Completa COD y Nombre","err"); return; }
+  if(state.accounts.find(a=>a.cod===cod)){ showToast("Ese COD ya existe","err"); return; }
+  state.accounts.push({cod,nombre:nom});
+  state.days.forEach(day=>{
+    day.saldos.push({cod,inicioBs:0,promedio:day.saldos[0]?.promedio||0});
+  });
+  saveLocal(); syncSave();
+  openAccMgr(); render();
+  showToast(`Cuenta ${cod} agregada`,"ok");
+}
+
+function removeAccount(cod){
+  if(!confirm(`¿Eliminar cuenta ${cod}?`)) return;
+  state.accounts = state.accounts.filter(a=>a.cod!==cod);
+  state.days.forEach(day=>{ day.saldos=day.saldos.filter(s=>s.cod!==cod); });
+  saveLocal(); syncSave();
+  openAccMgr(); render();
+}
+
+// ══════════════════════════════════════════════
+//  EXCEL EXPORT
+// ══════════════════════════════════════════════
+function exportExcel(){
+  const wb = XLSX.utils.book_new();
+  state.days.forEach((day,di)=>{
+    const r   = calcResumen(day);
+    const lbl = day.label||`Día ${String(di+1).padStart(2,"0")}`;
+    const rows=[[`CONTROL DIARIO Bs — ${lbl}`],[]];
+    rows.push(["SALDOS","","","","","",""]);
+    rows.push(["COD","CUENTA","INICIO Bs","PROMEDIO","PESOS","COMPRA","VENTA","STOCK"]);
+    day.saldos.forEach(s=>{
+      const acc=state.accounts.find(a=>a.cod===s.cod);
+      const comp=day.compras.filter(c=>c.cod===s.cod).reduce((a,c)=>a+n(c.bs),0);
+      const vent=day.ventas.filter(v=>v.cod===s.cod).reduce((a,v)=>a+n(v.bs),0);
+      rows.push([s.cod,acc?.nombre||"",n(s.inicioBs),n(s.promedio),n(s.inicioBs)*n(s.promedio),comp,vent,n(s.inicioBs)+comp-vent]);
+    });
+    rows.push([]);
+    rows.push(["VENTAS","","","","","","","COMPRAS","","","","",""]);
+    rows.push(["NOMBRE","COD","CUENTA","TASA","Bs","PESOS","","NOMBRE","COD","CUENTA","TASA","Bs","PESOS"]);
+    const vF=day.ventas.filter(v=>v.bs||v.nombre);
+    const cF=day.compras.filter(c=>c.bs||c.nombre);
+    const mx=Math.max(vF.length,cF.length,1);
+    for(let i=0;i<mx;i++){
+      const v=vF[i]||{},c=cF[i]||{};
+      const vA=state.accounts.find(a=>a.cod===v.cod);
+      const cA=state.accounts.find(a=>a.cod===c.cod);
+      rows.push([v.nombre||"",v.cod||"",vA?.nombre||"",n(v.tasa)||"",n(v.bs)||"",n(v.bs)&&n(v.tasa)?n(v.bs)*n(v.tasa):"",
+                 "",c.nombre||"",c.cod||"",cA?.nombre||"",n(c.tasa)||"",n(c.bs)||"",n(c.bs)&&n(c.tasa)?n(c.bs)*n(c.tasa):""]);
+    }
+    rows.push(["TOTAL","","","",vF.reduce((a,v)=>a+n(v.bs),0),vF.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0),
+               "","TOTAL","","","",cF.reduce((a,c)=>a+n(c.bs),0),cF.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0)]);
+    rows.push([]);
+    rows.push(["RESUMEN DEL DÍA"]);
+    [["INICIO EN Bs",r.inicioBs],["INICIO EN PESOS",r.inicioPesos],
+     ["Bs COMPRADOS",r.bsComp],["Bs COMPRADOS EN PESOS",r.copComp],
+     ["Bs VENDIDOS",r.bsVend],["Bs VENDIDOS EN PESOS",r.copVend],
+     ["PROMEDIO COMPRA REAL",r.promCompra],["PROMEDIO VENTA",r.promVenta],
+     ["UTILIDAD (COP)",r.utilidad],["QUEDA EN Bs",r.quedaBs],
+     ["VALOR EN PESOS (costo)",r.valorPesos]
+    ].forEach(([l,v])=>rows.push([l,v]));
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=Array(14).fill({wch:16});
+    XLSX.utils.book_append_sheet(wb,ws,lbl.slice(0,31));
+  });
+  // Resumen General
+  const sRows=[["RESUMEN GENERAL DEL MES"],[]];
+  sRows.push(["DÍA","INICIO Bs","Bs COMP","COP COMP","Bs VEND","COP VEND","PROM COMPRA","PROM VENTA","UTILIDAD","QUEDA Bs","VALOR PESOS"]);
+  let tBC=0,tCC=0,tBV=0,tCV=0,tU=0;
+  state.days.forEach((day,di)=>{
+    const r=calcResumen(day);
+    tBC+=r.bsComp;tCC+=r.copComp;tBV+=r.bsVend;tCV+=r.copVend;tU+=r.utilidad;
+    sRows.push([day.label||`Día ${di+1}`,r.inicioBs,r.bsComp,r.copComp,r.bsVend,r.copVend,r.promCompra,r.promVenta,r.utilidad,r.quedaBs,r.valorPesos]);
+  });
+  sRows.push([]);
+  sRows.push(["TOTALES","",tBC,tCC,tBV,tCV,"","",tU,"",""]);
+  const wsS=XLSX.utils.aoa_to_sheet(sRows);
+  wsS['!cols']=Array(11).fill({wch:16});
+  XLSX.utils.book_append_sheet(wb,wsS,"Resumen General");
+  XLSX.writeFile(wb,`Control_Bs_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast("Excel descargado ✓","ok");
+}
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+let toastTimer=null;
+function showToast(msg,type="ok"){
+  const el=document.getElementById("toast");
+  el.textContent=msg;
+  el.className=`toast ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.add("hide"),3000);
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+async function init(){
+  loadLocal();
+  if(state.days.length===0) state.days=[emptyDay()];
+  if(state.scriptUrl) setSyncStatus("","Conectado a Sheets");
+  render();
+  if(state.scriptUrl){
+    await syncLoad();
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
