@@ -615,11 +615,20 @@ trow.cells[5].textContent = fmt(totStock,2);
 // ══════════════════════════════════════════════
 // MOVIMIENTOS (ventas / compras)
 // ══════════════════════════════════════════════
+function reRenderMov(tipo){
+const day = state.days[state.currentDay];
+const cardId = tipo === "ventas" ? "mov-card-ventas" : "mov-card-compras";
+const el = document.getElementById(cardId);
+if(el){
+el.outerHTML = renderMovHTML(day, tipo);
+}
+}
+
 function addMovRow(tipo){
 const day = state.days[state.currentDay];
 day[tipo].push({nombre:"",cod:"",tasa:"",bs:"",done:false});
-saveLocal();
-renderMovTable(tipo);
+saveLocal(); syncSave();
+reRenderMov(tipo);
 renderResumen();
 updateSaldoCalcs();
 }
@@ -628,7 +637,7 @@ function delMovRow(tipo, idx){
 const day = state.days[state.currentDay];
 day[tipo].splice(idx,1);
 saveLocal(); syncSave();
-renderMovTable(tipo);
+reRenderMov(tipo);
 renderResumen();
 updateSaldoCalcs();
 }
@@ -815,7 +824,7 @@ onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumF
 <td><button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button></td>
 </tr>`;
 });
-return `<div class="card">
+return `<div class="card" id="mov-card-${tipo}">
 <div class="card-header ${cls}">${hdr}</div>
 <datalist id="cods-list">${state.accounts.map(a=>`<option value="${a.cod}">`).join("")}</datalist>
 <div class="tbl-wrap"><table>
