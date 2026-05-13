@@ -477,9 +477,13 @@ setSyncStatus("error","Sin conexión");
 }
 }
 
-async function syncSave(){
+let syncTimer = null;
+function syncSave(){
 if(!state.scriptUrl) return;
+// Debounce: wait 1.5s after last change before saving
+clearTimeout(syncTimer);
 setSyncStatus("loading","Guardando...");
+syncTimer = setTimeout(async ()=>{
 try{
 const res = await fetch(state.scriptUrl, {
 method:"POST",
@@ -498,6 +502,7 @@ setSyncStatus("error","Error al guardar");
 }catch(e){
 setSyncStatus("error","Sin conexión");
 }
+}, 1500);
 }
 
 async function syncNow(){
@@ -1250,8 +1255,6 @@ this.value=num?num.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFracti
 }
 
 init();
-// Auto-sync every 60 seconds if connected
-setInterval(()=>{ if(state.scriptUrl) syncLoad(); }, 60000);
 </script>
 
 </body>
