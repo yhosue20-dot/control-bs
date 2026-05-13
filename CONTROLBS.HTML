@@ -230,6 +230,34 @@ color:var(–text);padding:7px 10px;font-family:var(–mono);font-size:11px;outl
 border-radius:8px;padding:10px 16px;font-size:12px;z-index:300;transition:opacity .3s;max-width:280px}
 .toast.hide{opacity:0;pointer-events:none}
 .toast.ok {border-color:var(–green);color:#7ee787}
+
+/* ── RESUMEN CLIENTE ── */
+.hdr-cliente{background:linear-gradient(90deg,#1a0a2e,#2d1a4a);color:#c084fc;border-bottom:2px solid #7c3aed}
+.cliente-search{padding:10px 12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(–border)}
+.cliente-search input{flex:1;background:var(–bg3);border:1px solid var(–border);border-radius:6px;
+color:var(–text);padding:6px 10px;font-size:12px;outline:none}
+.cliente-search input:focus{border-color:#7c3aed}
+.cliente-search datalist{}
+.factura{padding:12px;font-family:var(–mono);font-size:11px}
+.factura-empty{padding:20px;text-align:center;color:var(–dim);font-size:11px}
+.factura-header{background:linear-gradient(90deg,#1a0a2e,#2d1a4a);border-radius:6px;
+padding:10px 14px;margin-bottom:10px;border:1px solid #7c3aed}
+.factura-title{font-size:13px;font-weight:700;color:#c084fc;margin-bottom:2px}
+.factura-sub{font-size:10px;color:var(–dim)}
+.factura-table{width:100%;border-collapse:collapse;margin-bottom:10px}
+.factura-table th{background:var(–bg3);color:var(–dim);font-size:10px;padding:5px 8px;
+text-align:center;border-bottom:1px solid var(–border);letter-spacing:.5px}
+.factura-table td{padding:5px 8px;text-align:center;border-bottom:1px solid #1c2128;font-size:11px}
+.factura-table tr.alt td{background:rgba(124,58,237,.06)}
+.factura-total{background:var(–bg3);border-radius:6px;padding:8px 12px;
+display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+border:1px solid #7c3aed}
+.factura-total-label{font-size:10px;color:var(–dim);font-weight:600;letter-spacing:.5px}
+.factura-total-val{font-size:14px;font-weight:700;color:#c084fc}
+.factura-copy-btn{display:block;width:100%;padding:8px;background:rgba(124,58,237,.2);
+border:1px solid #7c3aed;border-radius:6px;color:#c084fc;cursor:pointer;
+font-family:var(–font);font-size:11px;font-weight:600;transition:all .15s;text-align:center}
+.factura-copy-btn:hover{background:rgba(124,58,237,.35)}
 .row-done td { background:rgba(46,160,67,.13)!important; opacity:.75; }
 .row-done .chk-btn { color:#7ee787; }
 .chk-btn {
@@ -509,6 +537,7 @@ saveLocal(); syncSave(); render();
 
 function setCurrentDay(i){
 state.currentDay = i;
+clienteFiltro = "";
 saveLocal(); render();
 }
 
@@ -693,6 +722,7 @@ ${renderMovHTML(day,"ventas")}
 ${renderMovHTML(day,"compras")}
 </div>
 ${renderResumenHTML(day)}
+${renderClienteHTML()}
 `;
 }
 
@@ -709,10 +739,10 @@ const stock = n(s.inicioBs)+compra-venta;
 rows += `<tr class="${i%2===0?"alt":""}" id="saldo-row-${i}">
 <td><span class="cod-badge">${s.cod}</span></td>
 <td class="td-l" style="font-size:11px">${acc?.nombre||""}</td>
-<td><input class="ni-fmt" inputmode="numeric"
+<td><input class="ni-fmt" inputmode="decimal"
 value="${fmtInput(n(s.inicioBs))}" placeholder="0"
-oninput="let v=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;updateInicio(${i},v)"
-onblur="let v=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/></td>
+oninput="let v=rawNum(this.value);updateInicio(${i},v)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/></td>
 <td class="td-pesos td-dim">${fmt(pesos,0)}</td>
 <td class="td-compra td-green">${fmt(compra,2)}</td>
 <td class="td-venta td-blue">${fmt(venta,2)}</td>
@@ -729,10 +759,10 @@ return `<div class="card">
 <span>💰 SALDOS</span>
 <div class="prom-wrap">
 Promedio inicial:&nbsp;<strong>${fmt(prom,4)}</strong>&nbsp;
-<input class="prom-inp ni-fmt" inputmode="numeric"
+<input class="prom-inp ni-fmt" inputmode="decimal"
 value="${fmtInput(prom)}" placeholder="0"
-oninput="let v=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;updatePromedio(v)"
-onblur="let v=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/>
+oninput="let v=rawNum(this.value);updatePromedio(v)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/>
 </div>
 </div>
 <div class="tbl-wrap"><table>
@@ -766,14 +796,14 @@ oninput="updateMov('${tipo}',${i},'nombre',this.value)"/></td>
 <td><input class="ni ni-cod" value="${r.cod}" placeholder="COD"
 oninput="updateMov('${tipo}',${i},'cod',this.value.toUpperCase())" list="cods-list"/></td>
 <td class="td-l" id="${tipo}-cuenta-${i}" style="font-size:10px;color:var(--dim)">${acc?.nombre||""}</td>
-<td><input class="ni-fmt" inputmode="numeric"
+<td><input class="ni-fmt" inputmode="decimal"
 value="${fmtInput(r.tasa)}" placeholder="tasa"
-oninput="let v=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;updateMov('${tipo}',${i},'tasa',v)"
-onblur="let v=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/></td>
-<td><input class="ni-fmt" inputmode="numeric"
+oninput="let v=rawNum(this.value);updateMov('${tipo}',${i},'tasa',v)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/></td>
+<td><input class="ni-fmt" inputmode="decimal"
 value="${fmtInput(r.bs)}" placeholder="bs"
-oninput="let v=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;updateMov('${tipo}',${i},'bs',v)"
-onblur="let v=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/></td>
+oninput="let v=rawNum(this.value);updateMov('${tipo}',${i},'bs',v)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/></td>
 <td class="td-dim td-mono" id="${tipo}-cop-${i}">${cop}</td>
 <td><button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button></td>
 </tr>`;
@@ -1035,17 +1065,163 @@ await syncLoad();
 }
 }
 
+// ══════════════════════════════════════════════════════════════
+// RESUMEN POR CLIENTE
+// ══════════════════════════════════════════════════════════════
+let clienteFiltro = "";
+
+function setClienteFiltro(val) {
+clienteFiltro = val;
+renderClienteCard();
+}
+
+function renderClienteCard() {
+const el = document.getElementById("cliente-card");
+if(el) el.outerHTML = renderClienteHTML();
+}
+
+function renderClienteHTML() {
+const day = state.days[state.currentDay];
+// Build unique client list from ventas
+const allNames = day.ventas
+.filter(v=>v.nombre||v.bs)
+.map(v=>v.nombre)
+.filter((v,i,a)=>v&&a.indexOf(v)===i)
+.sort();
+
+const filtered = clienteFiltro
+? day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(v.bs)>0)
+: [];
+
+const totBs = filtered.reduce((a,v)=>a+n(v.bs),0);
+const totCop = filtered.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+
+let facturaHTML = "";
+if(clienteFiltro && filtered.length===0) {
+facturaHTML = `<div class="factura-empty">Sin transacciones para "<strong>${clienteFiltro}</strong>"</div>`;
+} else if(filtered.length>0) {
+let rows="";
+filtered.forEach((v,i)=>{
+const cop=n(v.bs)*n(v.tasa);
+rows+=`<tr class="${i%2===0?"alt":""}">
+<td>${i+1}</td>
+<td class="td-green">${fmt(n(v.bs),2)}</td>
+<td>${fmt(n(v.tasa),4)}</td>
+<td class="td-blue">${fmtCOP(cop)}</td>
+<td>${state.accounts.find(a=>a.cod===v.cod)?.nombre||v.cod||"—"}</td>
+</tr>`;
+});
+
+// Build copy text
+const copyText = buildFacturaText(clienteFiltro, filtered, totBs, totCop, day.label);
+
+facturaHTML = `
+<div class="factura">
+<div class="factura-header">
+<div class="factura-title">👤 ${clienteFiltro.toUpperCase()}</div>
+<div class="factura-sub">${day.label} · ${filtered.length} transacción${filtered.length>1?"es":""}</div>
+</div>
+<table class="factura-table">
+<thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>TOTAL COP</th><th>CUENTA</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<div class="factura-total">
+<div>
+<div class="factura-total-label">TOTAL Bs</div>
+<div style="color:#7ee787;font-family:var(--mono);font-weight:700">${fmt(totBs,2)}</div>
+</div>
+<div style="text-align:right">
+<div class="factura-total-label">TOTAL COP</div>
+<div class="factura-total-val">${fmtCOP(totCop)}</div>
+</div>
+</div>
+<button class="factura-copy-btn" onclick="copyFactura(\`${copyText.replace(/`/g,"'")}\`)">
+📋 Copiar resumen para enviar
+</button>
+</div>`;
+} else {
+facturaHTML = `<div class="factura-empty">Escribe el nombre del cliente para ver sus transacciones</div>`;
+}
+
+return `<div class="card" id="cliente-card">
+<div class="card-header hdr-cliente">👤 RESUMEN POR CLIENTE</div>
+<div class="cliente-search">
+<input type="text" placeholder="🔍 Buscar cliente..."
+value="${clienteFiltro}"
+list="clientes-list"
+oninput="setClienteFiltro(this.value)"
+autocomplete="off"/>
+<datalist id="clientes-list">
+${allNames.map(n=>`<option value="${n}">`).join("")}
+</datalist>
+${clienteFiltro?`<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="setClienteFiltro('');document.querySelector('.cliente-search input').value=''">✕</button>`:""}
+</div>
+${facturaHTML}
+</div>`;
+}
+
+function buildFacturaText(nombre, ventas, totBs, totCop, fecha) {
+let txt = "━━━━━━━━━━━━━━━━━━━━━━━\n";
+txt += ` RESUMEN DE COMPRA\n`;
+txt += ` ${nombre.toUpperCase()}\n`;
+txt += ` ${fecha}\n`;
+txt += "━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+ventas.forEach((v,i)=>{
+const cop = n(v.bs)*n(v.tasa);
+txt += ` ${i+1}. ${fmt(n(v.bs),2)} Bs\n`;
+txt += ` Tasa: ${fmt(n(v.tasa),4)} COP/Bs\n`;
+txt += ` Total: ${fmtCOP(cop)}\n\n`;
+});
+txt += "━━━━━━━━━━━━━━━━━━━━━━━\n";
+txt += ` TOTAL Bs: ${fmt(totBs,2)}\n`;
+txt += ` TOTAL COP: ${fmtCOP(totCop)}\n`;
+txt += "━━━━━━━━━━━━━━━━━━━━━━━";
+return txt;
+}
+
+function copyFactura(text) {
+navigator.clipboard.writeText(text).then(()=>{
+showToast("Resumen copiado — listo para pegar en WhatsApp ✓","ok");
+}).catch(()=>{
+showToast("No se pudo copiar","err");
+});
+}
+
 // ── Formatted number input helpers ──
 function rawNum(str) {
-// Remove all dots/commas used as thousand separators, keep decimal comma/dot
 if(!str && str!==0) return "";
-const s = String(str).replace(/\./g,"").replace(/,/g,".");
+let s = String(str).trim();
+// Detect format: if both . and , present, figure out which is decimal
+if(s.includes('.') && s.includes(',')) {
+// whichever comes last is decimal
+if(s.lastIndexOf('.') > s.lastIndexOf(',')) {
+s = s.replace(/,/g,''); // remove thousand sep commas
+} else {
+s = s.replace(/\./g,'').replace(',','.'); // remove thousand sep dots, comma->dot
+}
+} else if(s.includes(',')) {
+// only comma: could be decimal (5,68) or thousand (1,000)
+const parts = s.split(',');
+if(parts.length===2 && parts[1].length<=4 && parts[1].length>=1) {
+s = s.replace(',','.'); // treat as decimal
+} else {
+s = s.replace(/,/g,''); // treat as thousand separator
+}
+} else if(s.includes('.')) {
+// only dot: could be decimal (5.68) or thousand (1.000)
+const parts = s.split('.');
+if(parts.length===2 && parts[1].length<=4 && parts[1].length>=1) {
+// keep as is, it's decimal
+} else {
+s = s.replace(/\./g,''); // treat as thousand separator
+}
+}
 return parseFloat(s)||0;
 }
 
 function fmtInput(val) {
 if(val===undefined||val===null||val==="") return "";
-const num = parseFloat(String(val).replace(/\./g,"").replace(/,/g,"."))||0;
+const num = rawNum(val);
 if(num===0) return "";
 return num.toLocaleString("es-CO", {minimumFractionDigits:0, maximumFractionDigits:4});
 }
@@ -1054,7 +1230,7 @@ function makeFmtInput(id, value, onChangeFn, placeholder="0") {
 return `<input class="ni-fmt" id="${id}"
 value="${fmtInput(value)}"
 placeholder="${placeholder}"
-inputmode="numeric"
+inputmode="decimal"
 onfocus="this.value=this.value.replace(/\\./g,'').replace(/,/g,'.')==='0'?'':this.value.replace(/[^0-9,]/g,'')"
 oninput="
 let raw=this.value.replace(/[^0-9,]/g,'');
