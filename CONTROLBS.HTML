@@ -233,6 +233,26 @@ border-radius:8px;padding:10px 16px;font-size:12px;z-index:300;transition:opacit
 .toast.hide{opacity:0;pointer-events:none}
 .toast.ok {border-color:var(–green);color:#7ee787}
 
+/* ── DIRECTO ── */
+.hdr-directo{background:linear-gradient(90deg,#1a1400,#2a2000);color:#fbbf24;border-bottom:2px solid #d97706}
+.directo-form{padding:12px;display:flex;flex-direction:column;gap:10px}
+.directo-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.directo-field{display:flex;flex-direction:column;gap:4px}
+.directo-label{font-size:9px;font-weight:700;color:var(–dim);letter-spacing:.6px}
+.directo-input{background:var(–bg3);border:1px solid var(–border);border-radius:6px;
+color:var(–text);padding:7px 10px;font-size:12px;outline:none;font-family:var(–mono)}
+.directo-input:focus{border-color:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.2)}
+.directo-preview{background:var(–bg3);border-radius:8px;padding:10px 12px;
+border:1px solid #d97706;font-size:11px;font-family:var(–mono)}
+.directo-preview-row{display:flex;justify-content:space-between;padding:2px 0}
+.directo-preview-label{color:var(–dim);font-size:10px}
+.directo-preview-val{font-weight:700}
+.directo-ganancia{color:#7ee787;font-size:14px!important}
+.btn-directo{background:linear-gradient(90deg,#d97706,#f59e0b);color:#000;font-weight:700;
+border:none;border-radius:8px;padding:10px;cursor:pointer;font-family:var(–font);
+font-size:13px;width:100%;transition:all .15s}
+.btn-directo:hover{filter:brightness(1.1)}
+
 /* ── RESUMEN CLIENTE ── */
 .hdr-cliente{background:linear-gradient(90deg,#1a0a2e,#2d1a4a);color:#c084fc;border-bottom:2px solid #7c3aed}
 .cliente-search{padding:10px 12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(–border)}
@@ -399,16 +419,19 @@ compras: [{nombre:"",cod:"",tasa:"",bs:"",done:false}],
 }
 
 function calcStock(s,ventas,compras){
-const c=compras.filter(x=>x.cod===s.cod).reduce((a,x)=>a+n(x.bs),0);
-const v=ventas.filter(x=>x.cod===s.cod).reduce((a,x)=>a+n(x.bs),0);
+// DR operations don't affect stock
+const c=compras.filter(x=>x.cod===s.cod&&x.cod!=="DR").reduce((a,x)=>a+n(x.bs),0);
+const v=ventas.filter(x=>x.cod===s.cod&&x.cod!=="DR").reduce((a,x)=>a+n(x.bs),0);
 return n(s.inicioBs)+c-v;
 }
 
 function calcPromCompraReal(day){
 const totInicio = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
 const promInicio = n(day.saldos[0]?.promedio);
-const sumBsC = day.compras.reduce((a,c)=>a+n(c.bs),0);
-const sumCopC = day.compras.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+// Exclude DR (directos) from promedio — they never enter inventory
+const comprasReales = day.compras.filter(c=>c.cod!=="DR");
+const sumBsC = comprasReales.reduce((a,c)=>a+n(c.bs),0);
+const sumCopC = comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
 const denom = totInicio+sumBsC;
 return denom===0?promInicio:(totInicio*promInicio+sumCopC)/denom;
 }
@@ -417,16 +440,41 @@ function calcResumen(day){
 const inicioBs = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
 const promInicio = n(day.saldos[0]?.promedio);
 const inicioPesos= inicioBs*promInicio;
-const bsComp = day.compras.reduce((a,c)=>a+n(c.bs),0);
-const copComp = day.compras.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
-const bsVend = day.ventas.reduce((a,v)=>a+n(v.bs),0);
-const copVend = day.ventas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+
+// Separate DR (directos) from real inventory operations
+const comprasReales = day.compras.filter(c=>c.cod!=="DR");
+const ventasReales = day.ventas.filter(v=>v.cod!=="DR");
+const comprasDirectas= day.compras.filter(c=>c.cod==="DR");
+const ventasDirectas = day.ventas.filter(v=>v.cod==="DR");
+
+const bsComp = comprasReales.reduce((a,c)=>a+n(c.bs),0);
+const copComp = comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+const bsVend = ventasReales.reduce((a,v)=>a+n(v.bs),0);
+const copVend = ventasReales.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+
+// Directo profit: (tasaVenta - tasaCompra) * Bs for each matched pair
+const copVentaDir = ventasDirectas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+const copCompraDir = comprasDirectas.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+const utilidadDirecta = copVentaDir - copCompraDir;
+
 const promCompra = calcPromCompraReal(day);
 const promVenta = bsVend>0?copVend/bsVend:0;
-const utilidad = (promVenta-promCompra)*bsVend;
+const utilidad = (promVenta-promCompra)*bsVend + utilidadDirecta;
 const quedaBs = inicioBs+bsComp-bsVend;
 const valorPesos = quedaBs*promCompra;
-return {inicioBs,inicioPesos,bsComp,copComp,bsVend,copVend,promCompra,promVenta,utilidad,quedaBs,valorPesos};
+
+// Totals including directos for display
+const bsCompTotal = bsComp + comprasDirectas.reduce((a,c)=>a+n(c.bs),0);
+const copCompTotal = copComp + copCompraDir;
+const bsVendTotal = bsVend + ventasDirectas.reduce((a,v)=>a+n(v.bs),0);
+const copVendTotal = copVend + copVentaDir;
+
+return {inicioBs,inicioPesos,
+bsComp:bsCompTotal, copComp:copCompTotal,
+bsVend:bsVendTotal, copVend:copVendTotal,
+bsCompReal:bsComp, bsVendReal:bsVend,
+utilidadDirecta,
+promCompra,promVenta,utilidad,quedaBs,valorPesos};
 }
 
 // ══════════════════════════════════════════════
@@ -545,6 +593,7 @@ saveLocal(); syncSave(); render();
 function setCurrentDay(i){
 state.currentDay = i;
 clienteFiltro = "";
+directoData = {cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
 saveLocal(); render();
 }
 
@@ -737,6 +786,7 @@ ${renderSaldosHTML(day)}
 ${renderMovHTML(day,"ventas")}
 ${renderMovHTML(day,"compras")}
 </div>
+${renderDirectoHTML()}
 ${renderResumenHTML(day)}
 ${renderClienteHTML()}
 `;
@@ -852,13 +902,14 @@ const r = calcResumen(day);
 const rows=[
 ["INICIO EN Bs", fmt(r.inicioBs,2), "neutral"],
 ["INICIO EN PESOS", fmtCOP(r.inicioPesos), "neutral"],
-["Bs COMPRADOS", fmt(r.bsComp,2), "compra"],
+["Bs COMPRADOS (real)", fmt(r.bsCompReal,2), "compra"],
 ["Bs COMPRADOS EN PESOS", fmtCOP(r.copComp), "compra"],
-["Bs VENDIDOS", fmt(r.bsVend,2), "venta"],
+["Bs VENDIDOS (real)", fmt(r.bsVendReal,2), "venta"],
 ["Bs VENDIDOS EN PESOS", fmtCOP(r.copVend), "venta"],
 ["PROMEDIO COMPRA REAL", fmt(r.promCompra,4), "compra"],
 ["PROMEDIO VENTA", fmt(r.promVenta,4), "venta"],
-["UTILIDAD (COP)", fmtCOP(r.utilidad), r.utilidad>=0?"win":"loss"],
+["UTILIDAD DIRECTA (DR)", fmtCOP(r.utilidadDirecta), r.utilidadDirecta>=0?"compra":"loss"],
+["UTILIDAD TOTAL (COP)", fmtCOP(r.utilidad), r.utilidad>=0?"win":"loss"],
 ["QUEDA EN Bs", fmt(r.quedaBs,2), "neutral"],
 ["VALOR EN PESOS (costo)", fmtCOP(r.valorPesos), "neutral"],
 ];
@@ -1084,6 +1135,153 @@ setSyncStatus("","Sin configurar");
 }
 
 // ══════════════════════════════════════════════════════════════
+// OPERACIÓN DIRECTA
+// ══════════════════════════════════════════════════════════════
+let directoData = {
+cliente:"", proveedor:"", codProv:"DR", bs:"", tasaVenta:"", tasaCompra:""
+};
+
+function updateDirecto(field, val){
+directoData[field] = val;
+renderDirectoPreview();
+}
+
+function renderDirectoPreview(){
+const bs = rawNum(directoData.bs);
+const tv = rawNum(directoData.tasaVenta);
+const tc = rawNum(directoData.tasaCompra);
+const copVenta = bs * tv;
+const copCompra = bs * tc;
+const ganancia = copVenta - copCompra;
+const el = document.getElementById("directo-preview");
+if(!el) return;
+el.innerHTML = `
+<div class="directo-preview-row">
+<span class="directo-preview-label">COP que recibes del cliente</span>
+<span class="directo-preview-val td-blue">${fmtCOP(copVenta)}</span>
+</div>
+<div class="directo-preview-row">
+<span class="directo-preview-label">COP que le pagas al proveedor</span>
+<span class="directo-preview-val td-green">${fmtCOP(copCompra)}</span>
+</div>
+<div class="directo-preview-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
+<span class="directo-preview-label">GANANCIA DIRECTA</span>
+<span class="directo-preview-val directo-ganancia">${fmtCOP(ganancia)}</span>
+</div>`;
+}
+
+function guardarDirecto(){
+const bs = rawNum(directoData.bs);
+const tv = rawNum(directoData.tasaVenta);
+const tc = rawNum(directoData.tasaCompra);
+if(!bs||!tv||!tc){ showToast("Completa Bs, tasa venta y tasa compra","err"); return; }
+if(!directoData.cliente){ showToast("Ingresa el nombre del cliente","err"); return; }
+if(!directoData.proveedor){ showToast("Ingresa el nombre del proveedor","err"); return; }
+
+const day = state.days[state.currentDay];
+
+// Register venta
+day.ventas.push({
+nombre: directoData.cliente,
+cod: directoData.codProv || "DR",
+tasa: tv,
+bs: bs,
+done: false,
+});
+
+// Register compra
+day.compras.push({
+nombre: directoData.proveedor,
+cod: directoData.codProv || "DR",
+tasa: tc,
+bs: bs,
+done: false,
+});
+
+// Reset form
+directoData = {cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
+saveLocal(); syncSave();
+reRenderMov("ventas");
+reRenderMov("compras");
+renderResumen();
+updateSaldoCalcs();
+renderDirectoCard();
+showToast("Operación directa registrada ✓","ok");
+}
+
+function renderDirectoCard(){
+const el = document.getElementById("directo-card");
+if(el) el.outerHTML = renderDirectoHTML();
+}
+
+function renderDirectoHTML(){
+const bs = rawNum(directoData.bs);
+const tv = rawNum(directoData.tasaVenta);
+const tc = rawNum(directoData.tasaCompra);
+const ganancia = bs&&tv&&tc ? fmtCOP(bs*tv - bs*tc) : "—";
+
+return `<div class="card" id="directo-card">
+<div class="card-header hdr-directo">⚡ OPERACIÓN DIRECTA (DR)</div>
+<div class="directo-form">
+<div class="directo-row">
+<div class="directo-field">
+<div class="directo-label">CLIENTE</div>
+<input class="directo-input" placeholder="Nombre cliente"
+value="${directoData.cliente}"
+oninput="updateDirecto('cliente',this.value)"/>
+</div>
+<div class="directo-field">
+<div class="directo-label">PROVEEDOR</div>
+<input class="directo-input" placeholder="Nombre proveedor"
+value="${directoData.proveedor}"
+oninput="updateDirecto('proveedor',this.value)"/>
+</div>
+</div>
+<div class="directo-row">
+<div class="directo-field">
+<div class="directo-label">COD CUENTA</div>
+<input class="directo-input" placeholder="DR" style="text-align:center"
+value="${directoData.codProv}"
+list="cods-list"
+oninput="updateDirecto('codProv',this.value.toUpperCase())"/>
+</div>
+<div class="directo-field">
+<div class="directo-label">Bs</div>
+<input class="directo-input" placeholder="0" inputmode="decimal"
+value="${directoData.bs}"
+oninput="updateDirecto('bs',this.value)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/>
+</div>
+</div>
+<div class="directo-row">
+<div class="directo-field">
+<div class="directo-label">TASA VENTA (lo que cobra)</div>
+<input class="directo-input" placeholder="0,0000" inputmode="decimal"
+value="${directoData.tasaVenta}"
+oninput="updateDirecto('tasaVenta',this.value)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/>
+</div>
+<div class="directo-field">
+<div class="directo-label">TASA COMPRA (lo que paga)</div>
+<input class="directo-input" placeholder="0,0000" inputmode="decimal"
+value="${directoData.tasaCompra}"
+oninput="updateDirecto('tasaCompra',this.value)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/>
+</div>
+</div>
+<div class="directo-preview" id="directo-preview">
+<div class="directo-preview-row">
+<span class="directo-preview-label">Completa los campos para ver la ganancia</span>
+</div>
+</div>
+<button class="btn-directo" onclick="guardarDirecto()">
+⚡ Registrar operación directa
+</button>
+</div>
+</div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
 // RESUMEN POR CLIENTE
 // ══════════════════════════════════════════════════════════════
 let clienteFiltro = "";
@@ -1100,77 +1298,155 @@ if(el) el.outerHTML = renderClienteHTML();
 
 function renderClienteHTML() {
 const day = state.days[state.currentDay];
-// Build unique client list from ventas
-const allNames = day.ventas
-.filter(v=>v.nombre||v.bs)
-.map(v=>v.nombre)
-.filter((v,i,a)=>v&&a.indexOf(v)===i)
-.sort();
 
-const filtered = clienteFiltro
+// All names from ventas and compras
+const allNames = [
+...day.ventas.filter(v=>v.nombre&&n(v.bs)>0).map(v=>v.nombre),
+...day.compras.filter(c=>c.nombre&&n(c.bs)>0).map(c=>c.nombre),
+].filter((v,i,a)=>v&&a.indexOf(v)===i).sort();
+
+const filtVentas = clienteFiltro
 ? day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(v.bs)>0)
 : [];
+const filtCompras = clienteFiltro
+? day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(c.bs)>0)
+: [];
 
-const totBs = filtered.reduce((a,v)=>a+n(v.bs),0);
-const totCop = filtered.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+const totVBs = filtVentas.reduce((a,v)=>a+n(v.bs),0);
+const totVCop = filtVentas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+const totCBs = filtCompras.reduce((a,c)=>a+n(c.bs),0);
+const totCCop = filtCompras.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+const hasData = filtVentas.length>0 || filtCompras.length>0;
 
 let facturaHTML = "";
-if(clienteFiltro && filtered.length===0) {
+if(clienteFiltro && !hasData) {
 facturaHTML = `<div class="factura-empty">Sin transacciones para "<strong>${clienteFiltro}</strong>"</div>`;
-} else if(filtered.length>0) {
+} else if(hasData) {
+
+// VENTAS section
+let ventasSection = "";
+if(filtVentas.length>0){
 let rows="";
-filtered.forEach((v,i)=>{
+filtVentas.forEach((v,i)=>{
 const cop=n(v.bs)*n(v.tasa);
 rows+=`<tr class="${i%2===0?"alt":""}">
 <td>${i+1}</td>
 <td class="td-green">${fmt(n(v.bs),2)}</td>
 <td>${fmt(n(v.tasa),4)}</td>
 <td class="td-blue">${fmtCOP(cop)}</td>
-<td>${state.accounts.find(a=>a.cod===v.cod)?.nombre||v.cod||"—"}</td>
+<td style="font-size:10px">${state.accounts.find(a=>a.cod===v.cod)?.nombre||v.cod||"—"}</td>
 </tr>`;
 });
-
-// Build copy text
-const copyText = buildFacturaText(clienteFiltro, filtered, totBs, totCop, day.label);
-
-facturaHTML = `
-<div class="factura">
-<div class="factura-header">
-<div class="factura-title">👤 ${clienteFiltro.toUpperCase()}</div>
-<div class="factura-sub">${day.label} · ${filtered.length} transacción${filtered.length>1?"es":""}</div>
+ventasSection = `
+<div style="font-size:10px;font-weight:700;color:#7dd3fc;padding:8px 12px 4px;letter-spacing:.5px">
+📤 VENTAS — Lo que me debe
 </div>
 <table class="factura-table">
 <thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>TOTAL COP</th><th>CUENTA</th></tr></thead>
 <tbody>${rows}</tbody>
 </table>
-<div class="factura-total">
+<div class="factura-total" style="margin:4px 12px 8px;border-color:#0077cc">
 <div>
-<div class="factura-total-label">TOTAL Bs</div>
-<div style="color:#7ee787;font-family:var(--mono);font-weight:700">${fmt(totBs,2)}</div>
+<div class="factura-total-label">TOTAL Bs VENDIDOS</div>
+<div style="color:#7ee787;font-family:var(--mono);font-weight:700">${fmt(totVBs,2)}</div>
 </div>
 <div style="text-align:right">
 <div class="factura-total-label">TOTAL COP</div>
-<div class="factura-total-val">${fmtCOP(totCop)}</div>
+<div style="color:#7dd3fc;font-family:var(--mono);font-weight:700;font-size:14px">${fmtCOP(totVCop)}</div>
 </div>
+</div>`;
+}
+
+// COMPRAS section
+let comprasSection = "";
+if(filtCompras.length>0){
+let rows="";
+filtCompras.forEach((c,i)=>{
+const cop=n(c.bs)*n(c.tasa);
+rows+=`<tr class="${i%2===0?"alt":""}">
+<td>${i+1}</td>
+<td class="td-green">${fmt(n(c.bs),2)}</td>
+<td>${fmt(n(c.tasa),4)}</td>
+<td class="td-blue">${fmtCOP(cop)}</td>
+<td style="font-size:10px">${state.accounts.find(a=>a.cod===c.cod)?.nombre||c.cod||"—"}</td>
+</tr>`;
+});
+comprasSection = `
+<div style="font-size:10px;font-weight:700;color:#5eead4;padding:8px 12px 4px;letter-spacing:.5px">
+📥 COMPRAS — Lo que le debo
 </div>
+<table class="factura-table">
+<thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>TOTAL COP</th><th>CUENTA</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<div class="factura-total" style="margin:4px 12px 8px;border-color:#00c9a7">
+<div>
+<div class="factura-total-label">TOTAL Bs COMPRADOS</div>
+<div style="color:#7ee787;font-family:var(--mono);font-weight:700">${fmt(totCBs,2)}</div>
+</div>
+<div style="text-align:right">
+<div class="factura-total-label">TOTAL COP</div>
+<div style="color:#5eead4;font-family:var(--mono);font-weight:700;font-size:14px">${fmtCOP(totCCop)}</div>
+</div>
+</div>`;
+}
+
+// Net summary (only when both ventas and compras exist)
+let netoSection = "";
+if(filtVentas.length>0 && filtCompras.length>0){
+const netoBS = totVBs - totCBs;
+const netoCOP = totVCop - totCCop;
+const colorBS = netoBS>=0?"#7dd3fc":"#f87171";
+const colorCOP = netoCOP>=0?"#7ee787":"#f87171";
+const labelBS = netoBS>=0?"Me debe (Bs)":"Le debo (Bs)";
+const labelCOP = netoCOP>=0?"Me debe (COP)":"Le debo (COP)";
+netoSection = `
+<div style="font-size:10px;font-weight:700;color:#fbbf24;padding:8px 12px 4px;letter-spacing:.5px">
+⚖️ SALDO NETO
+</div>
+<div style="margin:0 12px 10px;background:var(--bg3);border-radius:8px;
+padding:10px 14px;border:1px solid #d97706;display:flex;justify-content:space-between;align-items:center">
+<div>
+<div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:.5px">${labelBS}</div>
+<div style="font-family:var(--mono);font-weight:700;font-size:15px;color:${colorBS}">${fmt(Math.abs(netoBS),2)} Bs</div>
+</div>
+<div style="text-align:right">
+<div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:.5px">${labelCOP}</div>
+<div style="font-family:var(--mono);font-weight:700;font-size:15px;color:${colorCOP}">${fmtCOP(Math.abs(netoCOP))}</div>
+</div>
+</div>`;
+}
+
+const copyText = buildFacturaText(clienteFiltro, filtVentas, filtCompras, totVBs, totVCop, totCBs, totCCop, day.label);
+
+facturaHTML = `<div class="factura">
+<div class="factura-header">
+<div class="factura-title">👤 ${clienteFiltro.toUpperCase()}</div>
+<div class="factura-sub">${day.label}</div>
+</div>
+${ventasSection}
+${comprasSection}
+${netoSection}
+<div style="padding:0 12px 10px">
 <button class="factura-copy-btn" onclick="copyFactura(\`${copyText.replace(/`/g,"'")}\`)">
 📋 Copiar resumen para enviar
 </button>
+</div>
 </div>`;
 } else {
-facturaHTML = `<div class="factura-empty">Escribe el nombre del cliente para ver sus transacciones</div>`;
+facturaHTML = `<div class="factura-empty">Escribe el nombre para ver sus transacciones</div>`;
 }
 
 return `<div class="card" id="cliente-card">
-<div class="card-header hdr-cliente">👤 RESUMEN POR CLIENTE</div>
+<div class="card-header hdr-cliente">👤 RESUMEN POR CLIENTE / PROVEEDOR</div>
 <div class="cliente-search">
-<input type="text" placeholder="🔍 Buscar cliente..."
+<input type="text" placeholder="🔍 Buscar cliente o proveedor..."
 value="${clienteFiltro}"
 list="clientes-list"
 oninput="setClienteFiltro(this.value)"
 autocomplete="off"/>
 <datalist id="clientes-list">
-${allNames.map(n=>`<option value="${n}">`).join("")}
+${allNames.map(nm=>`<option value="${nm}">`).join("")}
 </datalist>
 ${clienteFiltro?`<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="setClienteFiltro('');document.querySelector('.cliente-search input').value=''">✕</button>`:""}
 </div>
@@ -1178,21 +1454,44 @@ ${facturaHTML}
 </div>`;
 }
 
-function buildFacturaText(nombre, ventas, totBs, totCop, fecha) {
+function buildFacturaText(nombre, ventas, compras, totVBs, totVCop, totCBs, totCCop, fecha) {
 let txt = "━━━━━━━━━━━━━━━━━━━━━━━\n";
-txt += ` RESUMEN DE COMPRA\n`;
 txt += ` ${nombre.toUpperCase()}\n`;
 txt += ` ${fecha}\n`;
-txt += "━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+txt += "━━━━━━━━━━━━━━━━━━━━━━━\n";
+
+if(ventas.length>0){
+txt += "\n 📤 VENTAS\n\n";
 ventas.forEach((v,i)=>{
 const cop = n(v.bs)*n(v.tasa);
 txt += ` ${i+1}. ${fmt(n(v.bs),2)} Bs\n`;
 txt += ` Tasa: ${fmt(n(v.tasa),4)} COP/Bs\n`;
 txt += ` Total: ${fmtCOP(cop)}\n\n`;
 });
-txt += "━━━━━━━━━━━━━━━━━━━━━━━\n";
-txt += ` TOTAL Bs: ${fmt(totBs,2)}\n`;
-txt += ` TOTAL COP: ${fmtCOP(totCop)}\n`;
+txt += ` Total Bs vendidos: ${fmt(totVBs,2)}\n`;
+txt += ` Total COP: ${fmtCOP(totVCop)}\n`;
+}
+
+if(compras.length>0){
+txt += "\n 📥 COMPRAS\n\n";
+compras.forEach((c,i)=>{
+const cop = n(c.bs)*n(c.tasa);
+txt += ` ${i+1}. ${fmt(n(c.bs),2)} Bs\n`;
+txt += ` Tasa: ${fmt(n(c.tasa),4)} COP/Bs\n`;
+txt += ` Total: ${fmtCOP(cop)}\n\n`;
+});
+txt += ` Total Bs comprados: ${fmt(totCBs,2)}\n`;
+txt += ` Total COP: ${fmtCOP(totCCop)}\n`;
+}
+
+if(ventas.length>0 && compras.length>0){
+const netoBS = totVBs - totCBs;
+const netoCOP = totVCop - totCCop;
+txt += "\n━━━━━━━━━━━━━━━━━━━━━━━\n";
+txt += " ⚖️ SALDO NETO\n\n";
+txt += ` ${netoBS>=0?"Me debe":"Le debo"} (Bs): ${fmt(Math.abs(netoBS),2)}\n`;
+txt += ` ${netoCOP>=0?"Me debe":"Le debo"} (COP): ${fmtCOP(Math.abs(netoCOP))}\n`;
+}
 txt += "━━━━━━━━━━━━━━━━━━━━━━━";
 return txt;
 }
@@ -1264,6 +1563,12 @@ this.value=num?num.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFracti
 }
 
 init();
+// Auto-sync every 30s pero solo si no hay cambios pendientes
+setInterval(()=>{
+if(state.scriptUrl && !syncTimer){
+syncLoad();
+}
+}, 30000);
 </script>
 
 </body>
