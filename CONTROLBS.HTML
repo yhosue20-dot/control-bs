@@ -156,9 +156,10 @@ text-align:center;}
 .ni-cod{width:50px;text-align:center}
 .del-btn{background:transparent;border:none;color:var(–red);cursor:pointer;font-size:15px;padding:0 3px;line-height:1}
 .del-btn:hover{color:#ff6b6b}
-.add-row-btn{display:block;width:100%;padding:7px;background:transparent;
-border:none;border-top:1px dashed var(–border);color:var(–dim);cursor:pointer;font-size:11px;transition:all .15s}
-.add-row-btn:hover{color:var(–gold);background:rgba(210,153,34,.05)}
+.add-row-btn{display:block;width:100%;padding:8px;background:transparent;
+border:none;border-top:1px dashed var(–border);color:var(–text);cursor:pointer;
+font-size:12px;font-weight:600;transition:all .15s;letter-spacing:.3px}
+.add-row-btn:hover{color:var(–cyan);background:rgba(0,229,255,.05)}
 
 /* ══════════════════════════════════════════════
 MOV GRID (ventas + compras side by side on desktop)
@@ -1058,10 +1059,12 @@ toastTimer=setTimeout(()=>el.classList.add("hide"),3000);
 async function init(){
 loadLocal();
 if(state.days.length===0) state.days=[emptyDay()];
-if(state.scriptUrl) setSyncStatus("","Conectado a Sheets");
 render();
 if(state.scriptUrl){
+setSyncStatus("loading","Sincronizando...");
 await syncLoad();
+} else {
+setSyncStatus("","Sin configurar");
 }
 }
 
@@ -1246,6 +1249,8 @@ this.value=num?num.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFracti
 }
 
 init();
+// Auto-sync every 60 seconds if connected
+setInterval(()=>{ if(state.scriptUrl) syncLoad(); }, 60000);
 </script>
 
 </body>
