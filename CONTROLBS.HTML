@@ -1,381 +1,535 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
 <title>Control Bs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-/* ══════════════════════════════════════════════
-VARIABLES & RESET
-══════════════════════════════════════════════ */
-:root {
---bg: #060d18;
---bg2: #0a1628;
---bg3: #0f2040;
---border: #1a3a5c;
---text: #e0f4ff;
---dim: #5a8aaa;
---gold: #00e5ff;
---gold-bg: #002a35;
---blue: #0077cc;
---blue-bg: #001f3f;
---green: #00c9a7;
---green-bg: #002a22;
---red: #ff4d6d;
---red-bg: #2d0a14;
---radius: 8px;
---font: 'Sora', sans-serif;
---mono: 'JetBrains Mono', monospace;
---cyan: #00e5ff;
---cyan-dim: #007a99;
-}
+/* ══ RESET & VARS ══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:13px}
-body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;
-background-image:radial-gradient(ellipse at top,#0a1f3a 0%,#060d18 60%)}
-input,button,select{font-family:var(--font)}
+:root{
+--bg: #111318;
+--bg2: #181c24;
+--bg3: #1e2330;
+--bg4: #252c3a;
+--border: #2a3244;
+--text: #e2e8f0;
+--dim: #64748b;
+--dim2: #94a3b8;
+--cyan: #22d3ee;
+--cyan2: #0891b2;
+--green: #10b981;
+--green2: #065f46;
+--red: #f43f5e;
+--red2: #4c0519;
+--blue: #3b82f6;
+--blue2: #1e3a5f;
+--gold: #f59e0b;
+--gold2: #451a03;
+--purple: #a855f7;
+--purple2: #2e1065;
+--radius: 10px;
+--sidebar: 220px;
+--font: 'Inter',sans-serif;
+--mono: 'JetBrains Mono',monospace;
+}
+html,body{height:100%;font-family:var(--font);font-size:13px;background:var(--bg);color:var(--text)}
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
-/* ══════════════════════════════════════════════
-TOPBAR
-══════════════════════════════════════════════ */
-#topbar{
-background:var(–bg2);
-border-bottom:2px solid var(–cyan-dim);
-padding:8px 14px;display:flex;align-items:flex-start;gap:8px;
-flex-wrap:wrap;position:fixed;top:0;left:0;right:0;z-index:1000;
-box-shadow:0 2px 20px rgba(0,229,255,0.15);
+/* ══ LAYOUT ════════════════════════════════════════════════ */
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ══ SIDEBAR ═══════════════════════════════════════════════ */
+#sidebar{
+width:var(--sidebar);min-width:var(--sidebar);
+background:var(--bg2);border-right:1px solid var(--border);
+display:flex;flex-direction:column;height:100vh;overflow:hidden;
+z-index:10;
 }
-#topbar-spacer{height:160px}
-@media(min-width:700px){#topbar-spacer{height:90px}}
-.logo{font-size:16px;font-weight:700;color:var(–cyan);letter-spacing:-0.5px;white-space:nowrap;
-padding-top:3px;text-shadow:0 0 12px rgba(0,229,255,0.6)}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(–dim);display:inline-block;margin-right:4px;transition:background .3s}
-.sync-dot.ok{background:var(–green)}
-.sync-dot.loading{background:var(–gold);animation:pulse 1s infinite}
-.sync-dot.error{background:var(–red)}
+.sidebar-logo{
+padding:18px 16px 14px;
+border-bottom:1px solid var(--border);
+}
+.sidebar-logo .logo-text{
+font-size:18px;font-weight:700;color:var(--cyan);letter-spacing:-0.5px;
+text-shadow:0 0 20px rgba(34,211,238,0.3);
+}
+.sidebar-logo .logo-sub{font-size:10px;color:var(--dim);margin-top:2px}
+.sync-badge{
+display:flex;align-items:center;gap:5px;
+font-size:9px;color:var(--dim);margin-top:6px;
+}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);transition:background .3s}
+.sync-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(16,185,129,.5)}
+.sync-dot.loading{background:var(--gold);animation:pulse 1s infinite}
+.sync-dot.error{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-.view-toggle{display:flex;gap:2px;background:var(–bg3);border-radius:8px;padding:2px}
-.vtab{padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-family:var(–font);
-font-size:11px;font-weight:600;background:transparent;color:var(–dim);transition:all .15s}
-.vtab:hover{color:var(–text)}
-.vtab.active{background:var(–cyan);color:#000;box-shadow:0 0 8px rgba(0,229,255,0.4)}
+/* Day selector */
+.sidebar-section-title{
+padding:10px 16px 6px;
+font-size:9px;font-weight:700;color:var(--dim);letter-spacing:1px;
+}
+#day-list{
+flex:1;overflow-y:auto;padding:0 8px 8px;
+display:flex;flex-direction:column;gap:2px;
+}
+#day-list::-webkit-scrollbar{width:3px}
+#day-list::-webkit-scrollbar-track{background:transparent}
+#day-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-#day-tabs{display:flex;gap:4px;flex-wrap:wrap;flex:1}
-.day-tab-wrap{display:flex;flex-direction:column;gap:2px}
-.day-tab{padding:4px 10px;border-radius:6px;border:1px solid var(–border);
-background:transparent;color:var(–dim);cursor:pointer;font-size:11px;font-weight:500;transition:all .15s}
-.day-tab:hover{border-color:var(–gold);color:var(–gold)}
-.day-tab.active{background:var(–cyan);border-color:var(–cyan);color:#000;font-weight:700;box-shadow:0 0 10px rgba(0,229,255,0.4)}
-.day-label-input{width:100%;background:var(–bg3);border:1px solid var(–cyan-dim);
-border-radius:4px;color:var(–cyan);padding:2px 6px;font-family:var(–mono);
-font-size:10px;text-align:center;outline:none}
-.day-label-input::placeholder{color:var(–dim)}
+.day-item{
+display:flex;flex-direction:column;gap:0;
+border-radius:8px;overflow:hidden;
+}
+.day-btn{
+display:flex;align-items:center;justify-content:space-between;
+padding:7px 10px;background:transparent;border:none;
+color:var(--dim2);cursor:pointer;font-family:var(--font);
+font-size:11px;font-weight:500;border-radius:8px;
+transition:all .15s;text-align:left;width:100%;
+}
+.day-btn:hover{background:var(--bg3);color:var(--text)}
+.day-btn.active{background:rgba(34,211,238,.1);color:var(--cyan);font-weight:600}
+.day-btn .day-num{
+font-family:var(--mono);font-size:10px;
+background:var(--bg4);padding:1px 5px;border-radius:4px;
+}
+.day-btn.active .day-num{background:rgba(34,211,238,.2);color:var(--cyan)}
+.day-label-inp{
+width:100%;background:rgba(34,211,238,.05);border:none;
+border-top:1px solid rgba(34,211,238,.2);
+color:var(--cyan);padding:4px 10px;font-family:var(--mono);
+font-size:10px;outline:none;
+}
+.day-label-inp::placeholder{color:var(--dim)}
 
-.topbar-btns{display:flex;gap:5px;flex-wrap:wrap}
-.btn{padding:5px 11px;border-radius:6px;border:none;cursor:pointer;
-font-family:var(–font);font-size:11px;font-weight:600;transition:all .15s;white-space:nowrap}
-.btn-gold{background:var(–cyan);color:#000;font-weight:700;box-shadow:0 0 10px rgba(0,229,255,0.3)}
-.btn-gold:hover{filter:brightness(1.2);box-shadow:0 0 18px rgba(0,229,255,0.5)}
-.btn-blue{background:#0077cc;color:#fff;box-shadow:0 0 8px rgba(0,119,204,0.3)}
-.btn-blue:hover{filter:brightness(1.2)}
-.btn-green{background:#00c9a7;color:#000;font-weight:700}
-.btn-green:hover{filter:brightness(1.2)}
-.btn-ghost{background:rgba(0,229,255,0.05);color:var(–cyan);border:1px solid var(–cyan-dim)}
-.btn-ghost:hover{background:rgba(0,229,255,0.1);border-color:var(–cyan)}
-.btn-danger{background:var(–red-bg);color:var(–red);border:1px solid var(–red)}
+/* Sidebar nav */
+#sidebar-nav{
+border-top:1px solid var(--border);padding:8px;
+display:flex;flex-direction:column;gap:2px;
+}
+.nav-btn{
+display:flex;align-items:center;gap:8px;
+padding:8px 10px;background:transparent;border:none;
+color:var(--dim2);cursor:pointer;font-family:var(--font);
+font-size:11px;font-weight:500;border-radius:8px;
+transition:all .15s;text-align:left;width:100%;
+}
+.nav-btn:hover{background:var(--bg3);color:var(--text)}
+.nav-btn.active{background:rgba(34,211,238,.1);color:var(--cyan)}
+.nav-btn .nav-icon{font-size:14px;width:20px;text-align:center}
 
-/* ══════════════════════════════════════════════
-MAIN LAYOUT
-══════════════════════════════════════════════ */
-#main{padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+/* Sidebar actions */
+#sidebar-actions{
+padding:8px;border-top:1px solid var(--border);
+display:flex;flex-direction:column;gap:4px;
+}
+.action-btn{
+display:flex;align-items:center;gap:8px;
+padding:7px 10px;border:none;border-radius:8px;
+cursor:pointer;font-family:var(--font);font-size:11px;
+font-weight:600;transition:all .15s;width:100%;
+}
+.ab-cyan{background:rgba(34,211,238,.15);color:var(--cyan)}
+.ab-cyan:hover{background:rgba(34,211,238,.25)}
+.ab-blue{background:rgba(59,130,246,.15);color:var(--blue)}
+.ab-blue:hover{background:rgba(59,130,246,.25)}
+.ab-green{background:rgba(16,185,129,.15);color:var(--green)}
+.ab-green:hover{background:rgba(16,185,129,.25)}
+.ab-red{background:rgba(244,63,94,.1);color:var(--red)}
+.ab-red:hover{background:rgba(244,63,94,.2)}
 
-/* ══════════════════════════════════════════════
-CARDS
-══════════════════════════════════════════════ */
-.card{background:var(–bg2);border:1px solid var(–border);border-radius:var(–radius);
-overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.4)}
-.card-header{padding:8px 14px;font-size:12px;font-weight:700;letter-spacing:.5px;
-display:flex;align-items:center;justify-content:space-between}
-.hdr-saldos {background:linear-gradient(90deg,#002a35,#003d52);color:var(–cyan);
-border-bottom:2px solid var(–cyan-dim);text-shadow:0 0 8px rgba(0,229,255,0.4)}
-.hdr-ventas {background:linear-gradient(90deg,#001f3f,#002d5c);color:#7dd3fc;border-bottom:2px solid #0077cc}
-.hdr-compras{background:linear-gradient(90deg,#002a22,#003d33);color:#5eead4;border-bottom:2px solid #00c9a7}
-.hdr-resumen{background:linear-gradient(90deg,#0a0a2e,#0f1a4a);color:var(–cyan);border-bottom:2px solid var(–cyan-dim)}
-.hdr-mes {background:linear-gradient(90deg,#0a0a2e,#0f1a4a);color:var(–cyan);border-bottom:2px solid var(–cyan-dim)}
+/* ══ CONTENT AREA ══════════════════════════════════════════ */
+#content{flex:1;overflow-y:auto;background:var(--bg)}
+#content::-webkit-scrollbar{width:4px}
+#content::-webkit-scrollbar-track{background:transparent}
+#content::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-.prom-wrap{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:400}
-.prom-inp{width:90px;background:var(–bg3);border:1px solid var(–cyan-dim);border-radius:4px;
-color:var(–cyan);padding:2px 6px;font-family:var(–mono);font-size:11px;text-align:center;outline:none}
-.prom-inp:focus{border-color:var(–cyan);box-shadow:0 0 6px rgba(0,229,255,0.3)}
+#page{padding:20px;max-width:1200px;}
 
-/* ══════════════════════════════════════════════
-TABLES
-══════════════════════════════════════════════ */
+/* ══ CARDS ═════════════════════════════════════════════════ */
+.card{
+background:var(--bg2);border:1px solid var(--border);
+border-radius:var(--radius);margin-bottom:16px;overflow:hidden;
+}
+.card-header{
+padding:10px 16px;display:flex;align-items:center;
+justify-content:space-between;border-bottom:1px solid var(--border);
+}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--dim2)}
+.card-title.t-cyan{color:var(--cyan)}
+.card-title.t-green{color:var(--green)}
+.card-title.t-blue{color:#7dd3fc}
+.card-title.t-gold{color:var(--gold)}
+.card-title.t-purple{color:var(--purple)}
+
+/* ══ TABLES ════════════════════════════════════════════════ */
 .tbl-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
-thead th{background:var(–bg3);color:var(–dim);font-weight:600;padding:6px 7px;
-text-align:center;border-bottom:1px solid var(–border);font-size:10px;letter-spacing:.4px;white-space:nowrap}
-tbody td{padding:4px 5px;text-align:center;border-bottom:1px solid #1c2128}
-tbody tr.alt td{background:rgba(255,255,255,.018)}
-tfoot td{background:var(–bg3);font-weight:700;padding:6px 7px;font-family:var(–mono);
-font-size:11px;border-top:2px solid var(–border);text-align:center}
-.td-l{text-align:left!important}
-.td-mono{font-family:var(–mono);font-size:11px}
-.td-gold{color:var(–cyan);font-family:var(–mono);font-size:11px;font-weight:600;text-shadow:0 0 6px rgba(0,229,255,0.3)}
-.td-green{color:#7ee787;font-family:var(–mono);font-size:11px}
-.td-blue{color:#79b8ff;font-family:var(–mono);font-size:11px}
-.td-red{color:var(–red)}
-.td-dim{color:var(–dim);font-family:var(–mono);font-size:11px}
-.neg{color:var(–red)!important}
-
-.cod-badge{display:inline-block;padding:1px 6px;border-radius:4px;
-background:var(–gold-bg);color:var(–cyan);font-weight:700;font-size:10px;font-family:var(–mono);
-border:1px solid var(–cyan-dim);text-shadow:0 0 6px rgba(0,229,255,0.4)}
-.day-chip{display:inline-block;padding:2px 8px;border-radius:4px;
-background:var(–bg3);color:var(–cyan);font-family:var(–mono);font-size:10px;font-weight:600;
-border:1px solid var(–cyan-dim)}
-
-/* ══════════════════════════════════════════════
-INPUTS IN TABLES
-══════════════════════════════════════════════ */
-.ni,.ti{width:100%;background:var(–bg3);border:1px solid var(–border);border-radius:4px;
-color:var(–text);padding:3px 5px;font-family:var(–mono);font-size:11px;outline:none}
-.ni{text-align:center}.ti{text-align:left}
-.ni:focus,.ti:focus{border-color:var(–cyan);box-shadow:0 0 4px rgba(0,229,255,0.2)}
-.ni-fmt{width:100%;background:var(–bg3);border:1px solid var(–border);border-radius:4px;
-color:var(–cyan);padding:3px 5px;font-family:var(–mono);font-size:11px;outline:none;
-text-align:center;}
-.ni-fmt:focus{border-color:var(–cyan);box-shadow:0 0 4px rgba(0,229,255,0.2);color:var(–text)}
-.ni-cod{width:50px;text-align:center}
-.del-btn{background:transparent;border:none;color:var(–red);cursor:pointer;font-size:15px;padding:0 3px;line-height:1}
-.del-btn:hover{color:#ff6b6b}
-.add-row-btn{display:block;width:100%;padding:10px;background:var(–bg3);
-border:none;border-top:2px solid var(–border);color:var(–text);cursor:pointer;
-font-size:13px;font-weight:700;transition:all .15s;letter-spacing:.3px;
-position:relative;z-index:1;-webkit-tap-highlight-color:rgba(0,229,255,.2)}
-.add-row-btn:hover,.add-row-btn:active{color:var(–cyan);background:rgba(0,229,255,.08)}
-
-/* ══════════════════════════════════════════════
-MOV GRID (ventas + compras side by side on desktop)
-══════════════════════════════════════════════ */
-.mov-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:860px){.mov-grid{grid-template-columns:1fr}}
-
-/* ══════════════════════════════════════════════
-RESUMEN DÍA
-══════════════════════════════════════════════ */
-.res-grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
-@media(max-width:580px){.res-grid{grid-template-columns:1fr}}
-.res-row{display:flex;justify-content:space-between;align-items:center;
-padding:6px 10px;border-radius:6px;font-size:11px}
-.res-neutral{background:var(–bg3)}
-.res-compra {background:var(–green-bg)}
-.res-venta {background:var(–blue-bg)}
-.res-win {background:#0d2818;border:1px solid var(–green)}
-.res-loss {background:var(–red-bg);border:1px solid var(–red)}
-.res-label {color:var(–dim);font-size:10px}
-.res-val {font-weight:700;font-family:var(–mono);font-size:12px}
-.res-win .res-val{color:#7ee787;font-size:14px}
-.res-loss .res-val{color:var(–red);font-size:14px}
-
-/* ══════════════════════════════════════════════
-RESUMEN MES
-══════════════════════════════════════════════ */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
-.kpi-card{padding:14px 16px;border-radius:10px;border:1px solid var(–border)}
-.kpi-green {background:linear-gradient(135deg,#002a22,#003d33);border-color:var(–green);box-shadow:0 0 12px rgba(0,201,167,0.15)}
-.kpi-blue {background:linear-gradient(135deg,#001f3f,#002d5c);border-color:var(–blue);box-shadow:0 0 12px rgba(0,119,204,0.15)}
-.kpi-gold {background:linear-gradient(135deg,#002a35,#003d52);border-color:var(–cyan);box-shadow:0 0 12px rgba(0,229,255,0.15)}
-.kpi-neut {background:var(–bg2)}
-.kpi-label {font-size:9px;font-weight:700;letter-spacing:.8px;color:var(–dim);margin-bottom:4px}
-.kpi-val {font-family:var(–mono);font-size:15px;font-weight:700}
-.kpi-green .kpi-val{color:#7ee787}
-.kpi-blue .kpi-val{color:#79b8ff}
-.kpi-gold .kpi-val{color:var(–gold)}
-.kpi-sub {font-family:var(–mono);font-size:11px;color:var(–dim);margin-top:2px}
-
-/* ══════════════════════════════════════════════
-MODAL
-══════════════════════════════════════════════ */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
-display:flex;align-items:center;justify-content:center}
-.modal{background:var(–bg2);border:1px solid var(–border);border-radius:12px;
-padding:20px;width:min(460px,95vw);max-height:85vh;overflow-y:auto}
-.modal h3{color:var(–gold);margin-bottom:14px;font-size:14px}
-.acc-list{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
-.acc-item{display:flex;align-items:center;justify-content:space-between;
-padding:6px 10px;background:var(–bg3);border-radius:6px}
-.acc-item span{font-family:var(–mono);font-size:11px}
-.acc-add{display:flex;gap:6px;margin-bottom:10px}
-.acc-add input{flex:1;background:var(–bg3);border:1px solid var(–border);border-radius:6px;
-color:var(–text);padding:6px 10px;font-size:12px;outline:none}
-.acc-add input:focus{border-color:var(–gold)}
-
-/* ══════════════════════════════════════════════
-CONFIG MODAL
-══════════════════════════════════════════════ */
-.cfg-field{margin-bottom:12px}
-.cfg-label{font-size:10px;color:var(–dim);letter-spacing:.5px;margin-bottom:4px;font-weight:600}
-.cfg-input{width:100%;background:var(–bg3);border:1px solid var(–border);border-radius:6px;
-color:var(–text);padding:7px 10px;font-family:var(–mono);font-size:11px;outline:none}
-.cfg-input:focus{border-color:var(–gold)}
-.cfg-note{font-size:10px;color:var(–dim);margin-top:4px;line-height:1.5}
-
-.toast{position:fixed;bottom:20px;right:20px;background:var(–bg3);border:1px solid var(–border);
-border-radius:8px;padding:10px 16px;font-size:12px;z-index:300;transition:opacity .3s;max-width:280px}
-.toast.hide{opacity:0;pointer-events:none}
-.toast.ok {border-color:var(–green);color:#7ee787}
-
-/* ── DIRECTO ── */
-.hdr-directo{background:linear-gradient(90deg,#1a1400,#2a2000);color:#fbbf24;border-bottom:2px solid #d97706}
-.directo-form{padding:12px;display:flex;flex-direction:column;gap:10px}
-.directo-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.directo-field{display:flex;flex-direction:column;gap:4px}
-.directo-label{font-size:9px;font-weight:700;color:var(–dim);letter-spacing:.6px}
-.directo-input{background:var(–bg3);border:1px solid var(–border);border-radius:6px;
-color:var(–text);padding:7px 10px;font-size:12px;outline:none;font-family:var(–mono)}
-.directo-input:focus{border-color:#fbbf24;box-shadow:0 0 6px rgba(251,191,36,.2)}
-.directo-preview{background:var(–bg3);border-radius:8px;padding:10px 12px;
-border:1px solid #d97706;font-size:11px;font-family:var(–mono)}
-.directo-preview-row{display:flex;justify-content:space-between;padding:2px 0}
-.directo-preview-label{color:var(–dim);font-size:10px}
-.directo-preview-val{font-weight:700}
-.directo-ganancia{color:#7ee787;font-size:14px!important}
-.btn-directo{background:linear-gradient(90deg,#d97706,#f59e0b);color:#000;font-weight:700;
-border:none;border-radius:8px;padding:10px;cursor:pointer;font-family:var(–font);
-font-size:13px;width:100%;transition:all .15s}
-.btn-directo:hover{filter:brightness(1.1)}
-
-/* ── RESUMEN CLIENTE ── */
-.hdr-cliente{background:linear-gradient(90deg,#1a0a2e,#2d1a4a);color:#c084fc;border-bottom:2px solid #7c3aed}
-.cliente-search{padding:10px 12px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(–border)}
-.cliente-search input{flex:1;background:var(–bg3);border:1px solid var(–border);border-radius:6px;
-color:var(–text);padding:6px 10px;font-size:12px;outline:none}
-.cliente-search input:focus{border-color:#7c3aed}
-.cliente-search datalist{}
-.factura{padding:12px;font-family:var(–mono);font-size:11px}
-.factura-empty{padding:20px;text-align:center;color:var(–dim);font-size:11px}
-.factura-header{background:linear-gradient(90deg,#1a0a2e,#2d1a4a);border-radius:6px;
-padding:10px 14px;margin-bottom:10px;border:1px solid #7c3aed}
-.factura-title{font-size:13px;font-weight:700;color:#c084fc;margin-bottom:2px}
-.factura-sub{font-size:10px;color:var(–dim)}
-.factura-table{width:100%;border-collapse:collapse;margin-bottom:10px}
-.factura-table th{background:var(–bg3);color:var(–dim);font-size:10px;padding:5px 8px;
-text-align:center;border-bottom:1px solid var(–border);letter-spacing:.5px}
-.factura-table td{padding:5px 8px;text-align:center;border-bottom:1px solid #1c2128;font-size:11px}
-.factura-table tr.alt td{background:rgba(124,58,237,.06)}
-.factura-total{background:var(–bg3);border-radius:6px;padding:8px 12px;
-display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
-border:1px solid #7c3aed}
-.factura-total-label{font-size:10px;color:var(–dim);font-weight:600;letter-spacing:.5px}
-.factura-total-val{font-size:14px;font-weight:700;color:#c084fc}
-.factura-copy-btn{display:block;width:100%;padding:8px;background:rgba(124,58,237,.2);
-border:1px solid #7c3aed;border-radius:6px;color:#c084fc;cursor:pointer;
-font-family:var(–font);font-size:11px;font-weight:600;transition:all .15s;text-align:center}
-.factura-copy-btn:hover{background:rgba(124,58,237,.35)}
-.row-done td { background:rgba(46,160,67,.13)!important; opacity:.75; }
-.row-done .chk-btn { color:#7ee787; }
-.chk-btn {
-background:transparent; border:1px solid var(–border); border-radius:4px;
-color:var(–dim); cursor:pointer; font-size:13px; padding:1px 4px;
-transition:all .15s; min-width:26px;
+thead th{
+background:var(--bg3);color:var(--dim);font-weight:600;
+padding:7px 10px;text-align:center;border-bottom:1px solid var(--border);
+font-size:10px;letter-spacing:.5px;white-space:nowrap;
 }
-.chk-btn:hover { border-color:var(–green); color:#7ee787; }
-.toast.err {border-color:var(–red);color:var(–red)}
+tbody td{padding:5px 8px;text-align:center;border-bottom:1px solid rgba(42,50,68,.5)}
+tbody tr:hover td{background:rgba(255,255,255,.02)}
+tfoot td{
+background:var(--bg3);font-weight:700;padding:7px 8px;
+font-family:var(--mono);font-size:11px;
+border-top:1px solid var(--border);text-align:center;
+}
+.td-l{text-align:left!important}
+.td-mono{font-family:var(--mono);font-size:11px}
+.td-cyan{color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600}
+.td-green{color:var(--green);font-family:var(--mono);font-size:11px}
+.td-blue{color:#7dd3fc;font-family:var(--mono);font-size:11px}
+.td-red{color:var(--red);font-family:var(--mono);font-size:11px}
+.td-dim{color:var(--dim2);font-family:var(--mono);font-size:11px}
+.neg{color:var(--red)!important}
 
-.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;
-height:60vh;gap:12px;color:var(–dim)}
-.spinner{width:32px;height:32px;border:3px solid var(–border);border-top-color:var(–gold);
-border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+.cod-tag{
+display:inline-block;padding:2px 7px;border-radius:5px;
+background:rgba(34,211,238,.1);color:var(--cyan);
+font-weight:700;font-size:10px;font-family:var(--mono);
+border:1px solid rgba(34,211,238,.2);
+}
 
-#cfg-url-hint{font-size:10px;color:var(–dim);margin-top:6px;line-height:1.6}
+/* ══ INPUTS ════════════════════════════════════════════════ */
+.ni,.ti{
+width:100%;background:var(--bg3);border:1px solid var(--border);
+border-radius:6px;color:var(--text);padding:4px 7px;
+font-family:var(--mono);font-size:11px;outline:none;
+}
+.ni{text-align:center}.ti{text-align:left}
+.ni:focus,.ti:focus{border-color:var(--cyan);background:var(--bg4)}
+.ni-fmt{
+width:100%;background:var(--bg3);border:1px solid var(--border);
+border-radius:6px;color:var(--cyan);padding:4px 7px;
+font-family:var(--mono);font-size:11px;outline:none;text-align:center;
+}
+.ni-fmt:focus{border-color:var(--cyan);background:var(--bg4);color:var(--text)}
+
+.del-btn{background:transparent;border:none;color:var(--dim);cursor:pointer;
+font-size:14px;padding:0 4px;line-height:1;transition:color .15s}
+.del-btn:hover{color:var(--red)}
+
+.add-row-btn{
+display:block;width:100%;padding:9px;background:transparent;
+border:none;border-top:1px dashed var(--border);
+color:var(--dim2);cursor:pointer;font-size:12px;font-weight:600;
+transition:all .15s;font-family:var(--font);
+}
+.add-row-btn:hover,.add-row-btn:active{color:var(--cyan);background:rgba(34,211,238,.04)}
+
+/* ══ SALDOS PROM ═══════════════════════════════════════════ */
+.prom-wrap{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim2)}
+.prom-val{color:var(--cyan);font-family:var(--mono);font-weight:600}
+.prom-inp{
+width:100px;background:var(--bg3);border:1px solid var(--border);
+border-radius:6px;color:var(--cyan);padding:3px 7px;
+font-family:var(--mono);font-size:11px;text-align:center;outline:none;
+}
+.prom-inp:focus{border-color:var(--cyan)}
+
+/* ══ RESUMEN DÍA ═══════════════════════════════════════════ */
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;padding:12px}
+.res-item{
+background:var(--bg3);border-radius:8px;padding:10px 14px;
+border:1px solid var(--border);
+}
+.res-item.win{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3)}
+.res-item.loss{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.3)}
+.res-item.compra{background:rgba(16,185,129,.05)}
+.res-item.venta{background:rgba(59,130,246,.05)}
+.res-label{font-size:9px;font-weight:700;color:var(--dim);letter-spacing:.6px;margin-bottom:4px}
+.res-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text)}
+.win .res-val{color:var(--green);font-size:15px}
+.loss .res-val{color:var(--red);font-size:15px}
+.compra .res-val{color:var(--green)}
+.venta .res-val{color:#7dd3fc}
+
+/* ══ MES KPIs ══════════════════════════════════════════════ */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+.kpi{padding:14px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2)}
+.kpi.k-green{background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.25)}
+.kpi.k-blue {background:rgba(59,130,246,.07);border-color:rgba(59,130,246,.25)}
+.kpi.k-cyan {background:rgba(34,211,238,.07);border-color:rgba(34,211,238,.25)}
+.kpi-label{font-size:9px;font-weight:700;color:var(--dim);letter-spacing:.7px;margin-bottom:5px}
+.kpi-val{font-family:var(--mono);font-size:15px;font-weight:700}
+.k-green .kpi-val{color:var(--green)}
+.k-blue .kpi-val{color:#7dd3fc}
+.k-cyan .kpi-val{color:var(--cyan)}
+.kpi-sub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
+
+/* ══ CLIENTE ═══════════════════════════════════════════════ */
+.search-wrap{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px}
+.search-inp{
+flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:7px;
+color:var(--text);padding:7px 12px;font-size:12px;outline:none;
+}
+.search-inp:focus{border-color:var(--cyan)}
+.factura-wrap{padding:12px 14px}
+.fac-header{margin-bottom:10px}
+.fac-name{font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:2px}
+.fac-date{font-size:10px;color:var(--dim)}
+.fac-section-title{font-size:10px;font-weight:700;letter-spacing:.6px;
+padding:6px 0 4px;border-top:1px solid var(--border);margin-top:8px}
+.fac-section-title.t-blue{color:#7dd3fc}
+.fac-section-title.t-green{color:var(--green)}
+.fac-total-row{
+display:flex;justify-content:space-between;align-items:center;
+background:var(--bg3);border-radius:7px;padding:8px 12px;margin:8px 0;
+}
+.fac-neto{
+background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+border-radius:8px;padding:10px 14px;margin-top:10px;
+display:flex;justify-content:space-between;
+}
+.fac-neto-side{display:flex;flex-direction:column;gap:2px}
+.fac-neto-label{font-size:9px;color:var(--dim);font-weight:700;letter-spacing:.5px}
+.fac-neto-val{font-family:var(--mono);font-size:14px;font-weight:700}
+.copy-btn{
+display:block;width:100%;padding:9px;margin-top:10px;
+background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);
+border-radius:8px;color:var(--purple);cursor:pointer;
+font-family:var(--font);font-size:12px;font-weight:600;transition:all .15s;
+}
+.copy-btn:hover{background:rgba(168,85,247,.25)}
+.empty-msg{padding:20px;text-align:center;color:var(--dim);font-size:12px}
+
+/* ══ DIRECTO ═══════════════════════════════════════════════ */
+.directo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+@media(max-width:600px){.directo-grid{grid-template-columns:1fr}}
+.df{display:flex;flex-direction:column;gap:4px}
+.df-label{font-size:9px;font-weight:700;color:var(--dim);letter-spacing:.5px}
+.df-inp{
+background:var(--bg3);border:1px solid var(--border);border-radius:7px;
+color:var(--text);padding:7px 10px;font-size:12px;font-family:var(--mono);outline:none;
+}
+.df-inp:focus{border-color:var(--gold)}
+.directo-preview{
+margin:0 14px 10px;background:var(--bg3);border-radius:8px;
+padding:10px 14px;border:1px solid rgba(245,158,11,.2);
+}
+.dp-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
+.dp-label{color:var(--dim)}
+.dp-val{font-family:var(--mono);font-weight:600}
+.dp-ganancia{color:var(--green);font-size:13px!important}
+.reg-btn{
+display:block;width:calc(100% - 28px);margin:0 14px 14px;
+padding:10px;background:linear-gradient(135deg,#d97706,#f59e0b);
+border:none;border-radius:8px;color:#000;font-weight:700;
+font-family:var(--font);font-size:13px;cursor:pointer;transition:all .15s;
+}
+.reg-btn:hover{filter:brightness(1.1)}
+
+/* ══ MOD POPUP ═════════════════════════════════════════════ */
+.overlay{
+position:fixed;inset:0;background:rgba(0,0,0,.7);
+z-index:200;display:flex;align-items:center;justify-content:center;
+}
+.modal{
+background:var(--bg2);border:1px solid var(--border);
+border-radius:12px;padding:20px;width:min(440px,95vw);max-height:85vh;overflow-y:auto;
+}
+.modal h3{font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:14px}
+.acc-item{display:flex;align-items:center;justify-content:space-between;
+padding:7px 10px;background:var(--bg3);border-radius:7px;margin-bottom:4px}
+.acc-item span{font-family:var(--mono);font-size:11px}
+.acc-add{display:flex;gap:6px;margin-bottom:10px}
+.acc-add input{flex:1;background:var(--bg3);border:1px solid var(--border);
+border-radius:7px;color:var(--text);padding:7px 10px;font-size:12px;outline:none}
+.acc-add input:focus{border-color:var(--cyan)}
+.cfg-label{font-size:10px;color:var(--dim);letter-spacing:.5px;margin-bottom:4px;font-weight:600}
+.cfg-inp{width:100%;background:var(--bg3);border:1px solid var(--border);
+border-radius:7px;color:var(--text);padding:8px 10px;font-family:var(--mono);
+font-size:11px;outline:none;margin-bottom:12px}
+.cfg-inp:focus{border-color:var(--cyan)}
+.cfg-note{font-size:10px;color:var(--dim);margin-top:-8px;margin-bottom:10px;line-height:1.5}
+.btn-row{display:flex;gap:8px;margin-top:4px}
+.mbtn{padding:8px 14px;border-radius:7px;border:none;cursor:pointer;
+font-family:var(--font);font-size:12px;font-weight:600;transition:all .15s}
+.mbtn-cyan{background:var(--cyan);color:#000}
+.mbtn-ghost{background:var(--bg3);color:var(--dim2);border:1px solid var(--border)}
+.mbtn-green{background:rgba(16,185,129,.2);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+
+/* ══ TOAST ═════════════════════════════════════════════════ */
+.toast{
+position:fixed;bottom:20px;right:20px;background:var(--bg2);
+border:1px solid var(--border);border-radius:9px;padding:10px 16px;
+font-size:12px;z-index:300;transition:opacity .3s;max-width:260px;
+}
+.toast.hide{opacity:0;pointer-events:none}
+.toast.ok {border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+
+.mob-totals{display:none}
+.mob-cop{display:none;font-size:11px;color:var(--green);font-family:var(--mono);
+text-align:center;margin-top:3px;font-weight:700;letter-spacing:.3px}
+/* ══ MOV GRID ══════════════════════════════════════════════ */
+.mov-grid-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* ══ MOBILE ════════════════════════════════════════════════ */
+#mobile-nav{display:none}
+@media(max-width:768px){
+#sidebar{display:none}
+#mobile-nav{
+display:flex;position:fixed;bottom:0;left:0;right:0;
+background:var(--bg2);border-top:1px solid var(--border);
+z-index:100;padding:6px 8px;gap:4px;
+}
+.mob-btn{
+flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+padding:6px 4px;background:transparent;border:none;cursor:pointer;
+color:var(--dim);font-family:var(--font);font-size:9px;font-weight:600;
+border-radius:8px;transition:all .15s;
+}
+.mob-btn.active{color:var(--cyan);background:rgba(34,211,238,.08)}
+.mob-btn .mob-icon{font-size:16px}
+#content{padding-bottom:70px}
+#page{padding:10px}
+
+/* Stack ventas/compras vertically on mobile */
+.mob-cop{display:block!important}
+.mob-totals{display:flex!important;justify-content:space-between;
+padding:8px 14px;background:var(--bg3);border-top:1px solid var(--border);
+font-family:var(--mono);font-size:12px;color:var(--dim2)}
+.mov-grid-wrap{grid-template-columns:1fr}
+
+/* Bigger inputs for mobile typing */
+.ni,.ti,.ni-fmt{
+padding:8px 10px;font-size:13px;border-radius:8px;
+}
+tbody td{padding:7px 5px}
+thead th{padding:8px 5px;font-size:11px}
+.add-row-btn{padding:12px;font-size:13px}
+
+/* Larger row height for touch */
+tbody tr{height:44px}
+
+/* Hide cuenta column on mobile to save space */
+.hide-mob{display:none!important}
+
+/* Bigger card headers */
+.card-header{padding:12px 14px}
+.card-title{font-size:13px}
+}
 </style>
-
 </head>
 <body>
+<div id="app">
 
-<!-- TOPBAR -->
-
-<div id="topbar">
-<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-<span class="logo">₿s Control</span>
-<div class="view-toggle">
-<button class="vtab active" onclick="setView('dia')" id="vtab-dia">📅 Día</button>
-<button class="vtab" onclick="setView('mes')" id="vtab-mes">📊 Mes</button>
-</div>
-<span style="font-size:10px;color:var(--dim)" id="sync-status">
-<span class="sync-dot" id="sync-dot"></span><span id="sync-text">Sin configurar</span>
-</span>
-</div>
-<div id="day-tabs"></div>
-<div class="topbar-btns">
-<button class="btn btn-gold" onclick="addDay()">+ Día</button>
-<button class="btn btn-blue" onclick="exportExcel()">⬇ Excel</button>
-<button class="btn btn-green" onclick="syncNow()" id="btn-sync">☁ Sincronizar</button>
-<button class="btn btn-ghost" onclick="openAccMgr()">⚙ Cuentas</button>
-<button class="btn btn-ghost" onclick="openConfig()">🔗 Sheets</button>
-<button class="btn btn-danger" onclick="resetMonth()">↺ Mes</button>
+<!-- ══ SIDEBAR ══ -->
+<div id="sidebar">
+<div class="sidebar-logo">
+<div class="logo-text">₿s Control</div>
+<div class="logo-sub">Control de Bolívares</div>
+<div class="sync-badge">
+<span class="sync-dot" id="sync-dot"></span>
+<span id="sync-text">Sin configurar</span>
 </div>
 </div>
 
-<!-- MAIN -->
+<div class="sidebar-section-title">DÍAS DEL MES</div>
+<div id="day-list"></div>
 
-<div id="topbar-spacer"></div>
-<div id="main"></div>
+<div id="sidebar-nav">
+<button class="nav-btn active" onclick="setView('dia')" id="nav-dia">
+<span class="nav-icon">📅</span> Vista del Día
+</button>
+<button class="nav-btn" onclick="setView('mes')" id="nav-mes">
+<span class="nav-icon">📊</span> Resumen del Mes
+</button>
+</div>
 
-<!-- TOAST -->
+<div id="sidebar-actions">
+<button class="action-btn ab-cyan" onclick="addDay()">
+<span>+</span> Nuevo Día
+</button>
+<button class="action-btn ab-blue" onclick="exportExcel()">
+<span>⬇</span> Exportar Excel
+</button>
+<button class="action-btn ab-green" onclick="syncNow()" id="btn-sync">
+<span>☁</span> Sincronizar
+</button>
+<button class="action-btn ab-cyan" onclick="openAccMgr()" style="background:rgba(100,116,139,.15);color:var(--dim2)">
+<span>⚙</span> Cuentas
+</button>
+<button class="action-btn ab-cyan" onclick="openConfig()" style="background:rgba(100,116,139,.15);color:var(--dim2)">
+<span>🔗</span> Google Sheets
+</button>
+<button class="action-btn ab-red" onclick="resetMonth()">
+<span>↺</span> Nuevo Mes
+</button>
+</div>
+</div>
 
-<div class="toast hide" id="toast"></div>
+<!-- ══ CONTENT ══ -->
+<div id="content">
+<div id="page"></div>
+</div>
 
-<!-- MODAL CUENTAS -->
+<!-- ══ MOBILE NAV ══ -->
+<div id="mobile-nav">
+<button class="mob-btn active" onclick="setView('dia');setMobActive(this)" id="mob-dia">
+<span class="mob-icon">📅</span>Día
+</button>
+<button class="mob-btn" onclick="setView('mes');setMobActive(this)" id="mob-mes">
+<span class="mob-icon">📊</span>Mes
+</button>
+<button class="mob-btn" onclick="addDay()">
+<span class="mob-icon">+</span>Día nuevo
+</button>
+<button class="mob-btn" onclick="exportExcel()">
+<span class="mob-icon">⬇</span>Excel
+</button>
+<button class="mob-btn" onclick="openConfig()">
+<span class="mob-icon">🔗</span>Sheets
+</button>
+<button class="mob-btn" onclick="openAccMgr()">
+<span class="mob-icon">⚙</span>Cuentas
+</button>
+</div>
 
+<!-- ══ MODAL CUENTAS ══ -->
 <div class="overlay" id="modal-acc" style="display:none" onclick="closeAccMgr()">
 <div class="modal" onclick="event.stopPropagation()">
 <h3>⚙ Gestión de Cuentas</h3>
-<div class="acc-list" id="acc-list"></div>
+<div id="acc-list"></div>
 <div class="acc-add">
-<input id="new-cod" placeholder="COD" style="max-width:65px"
-oninput="this.value=this.value.toUpperCase()"/>
-<input id="new-nom" placeholder="Nombre de la cuenta"
-oninput="this.value=this.value.toUpperCase()"/>
-<button class="btn btn-gold" onclick="addAccount()">+ Agregar</button>
+<input id="new-cod" placeholder="COD" style="max-width:65px" oninput="this.value=this.value.toUpperCase()"/>
+<input id="new-nom" placeholder="Nombre" oninput="this.value=this.value.toUpperCase()"/>
+<button class="mbtn mbtn-cyan" onclick="addAccount()">+ Agregar</button>
 </div>
-<button class="btn btn-ghost" style="width:100%" onclick="closeAccMgr()">Cerrar</button>
+<button class="mbtn mbtn-ghost" style="width:100%" onclick="closeAccMgr()">Cerrar</button>
 </div>
 </div>
 
-<!-- MODAL CONFIG SHEETS -->
-
+<!-- ══ MODAL CONFIG ══ -->
 <div class="overlay" id="modal-cfg" style="display:none" onclick="closeCfg()">
 <div class="modal" onclick="event.stopPropagation()">
-<h3>🔗 Conectar con Google Sheets</h3>
-<div class="cfg-field">
-<div class="cfg-label">URL DEL APPS SCRIPT (Web App URL)</div>
-<input class="cfg-input" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec"/>
-<div id="cfg-url-hint">
-Pega aquí la URL que obtienes al publicar el Apps Script como aplicación web.<br>
-👉 Ver instrucciones en el archivo <strong>INSTRUCCIONES.txt</strong> que viene junto a esta app.
-</div>
-</div>
-<div style="display:flex;gap:8px;margin-top:4px">
-<button class="btn btn-green" onclick="saveCfg()">💾 Guardar y probar</button>
-<button class="btn btn-ghost" onclick="closeCfg()">Cancelar</button>
+<h3>🔗 Conectar Google Sheets</h3>
+<div class="cfg-label">URL DEL APPS SCRIPT</div>
+<input class="cfg-inp" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec"/>
+<div class="cfg-note">Pega la URL que obtuviste al publicar el Apps Script como aplicación web.</div>
+<div class="btn-row">
+<button class="mbtn mbtn-green" onclick="saveCfg()">💾 Guardar y probar</button>
+<button class="mbtn mbtn-ghost" onclick="closeCfg()">Cancelar</button>
 </div>
 </div>
 </div>
 
+<div class="toast hide" id="toast"></div>
+
+
 <script>
-// ══════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════
+
+// ══ STATE ══════════════════════════════════════════════════
 const DEFAULT_ACCOUNTS = [
 {cod:"VY",nombre:"VENEZUELA YHOSUE"},{cod:"BY",nombre:"BANESCO YOSMEL"},
 {cod:"PH",nombre:"PROVINCIAL HUGO"}, {cod:"BD",nombre:"BANESCO DEISY"},
@@ -383,406 +537,376 @@ const DEFAULT_ACCOUNTS = [
 {cod:"DR",nombre:"DIRECTOS"}, {cod:"VM",nombre:"VNZLA MAMA"},
 {cod:"PP",nombre:"PAPA PROVINCIAL"},
 ];
-
-let state = {
-accounts: DEFAULT_ACCOUNTS,
-days: [],
-currentDay: 0,
-scriptUrl: "",
-};
+let state = { accounts:DEFAULT_ACCOUNTS, days:[], currentDay:0, scriptUrl:"" };
 let currentView = "dia";
+let clienteFiltro = "";
+let directoData = {cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
+let syncTimer = null;
+let toastTimer = null;
 
-// ══════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════
-const n = v => parseFloat(v)||0;
+// ══ HELPERS ════════════════════════════════════════════════
+function rawNum(str){
+if(str===undefined||str===null||str==="") return 0;
+if(typeof str==="number") return str;
+let s=String(str).trim();
+if(s.includes(".")&&s.includes(",")){
+if(s.lastIndexOf(".")>s.lastIndexOf(",")) s=s.replace(/,/g,"");
+else s=s.replace(/\./g,"").replace(",",".");
+} else if(s.includes(",")){
+const p=s.split(",");
+if(p.length===2&&p[1].length>=1&&p[1].length<=4) s=s.replace(",",".");
+else s=s.replace(/,/g,"");
+} else if(s.includes(".")){
+const p=s.split(".");
+if(p.length>=2&&p[p.length-1].length===3) s=s.replace(/\./g,"");
+}
+return parseFloat(s)||0;
+}
+const n = v => {
+if(v===undefined||v===null||v==="") return 0;
+if(typeof v==="number") return v;
+return rawNum(v);
+};
 const fmt = (v,d=2) => v===undefined||v===null||v===""?"":Number(v).toLocaleString("es-CO",{minimumFractionDigits:d,maximumFractionDigits:d});
 const fmtCOP = v => (v||v===0)?"$ "+Number(v).toLocaleString("es-CO",{minimumFractionDigits:0,maximumFractionDigits:0}):"";
-
+function fmtInput(val){
+if(val===undefined||val===null||val==="") return "";
+const num=rawNum(val); if(num===0) return "";
+return num.toLocaleString("es-CO",{minimumFractionDigits:0,maximumFractionDigits:4});
+}
 function todayStr(){
 const d=new Date();
 return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
 }
 
-function emptyDay(prevDay=null){
-const promPrev = prevDay ? calcPromCompraReal(prevDay) : 0;
-return {
-label: todayStr(),
-saldos: state.accounts.map(a=>({
-cod:a.cod,
-inicioBs: prevDay?(prevDay.saldos.find(s=>s.cod===a.cod)?.stock??0):0,
-promedio: promPrev,
-})),
-ventas: [{nombre:"",cod:"",tasa:"",bs:"",done:false}],
-compras: [{nombre:"",cod:"",tasa:"",bs:"",done:false}],
-};
-}
-
+// ══ CALCULATIONS ═══════════════════════════════════════════
 function calcStock(s,ventas,compras){
-// DR operations don't affect stock
 const c=compras.filter(x=>x.cod===s.cod&&x.cod!=="DR").reduce((a,x)=>a+n(x.bs),0);
 const v=ventas.filter(x=>x.cod===s.cod&&x.cod!=="DR").reduce((a,x)=>a+n(x.bs),0);
 return n(s.inicioBs)+c-v;
 }
-
 function calcPromCompraReal(day){
-const totInicio = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
-const promInicio = n(day.saldos[0]?.promedio);
-// Exclude DR (directos) from promedio — they never enter inventory
-const comprasReales = day.compras.filter(c=>c.cod!=="DR");
-const sumBsC = comprasReales.reduce((a,c)=>a+n(c.bs),0);
-const sumCopC = comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
-const denom = totInicio+sumBsC;
+const totInicio=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
+const promInicio=n(day.saldos[0]?.promedio);
+const comprasReales=day.compras.filter(c=>c.cod!=="DR");
+const sumBsC=comprasReales.reduce((a,c)=>a+n(c.bs),0);
+const sumCopC=comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+const denom=totInicio+sumBsC;
 return denom===0?promInicio:(totInicio*promInicio+sumCopC)/denom;
 }
-
 function calcResumen(day){
-const inicioBs = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
-const promInicio = n(day.saldos[0]?.promedio);
-const inicioPesos= inicioBs*promInicio;
-
-// Separate DR (directos) from real inventory operations
-const comprasReales = day.compras.filter(c=>c.cod!=="DR");
-const ventasReales = day.ventas.filter(v=>v.cod!=="DR");
-const comprasDirectas= day.compras.filter(c=>c.cod==="DR");
-const ventasDirectas = day.ventas.filter(v=>v.cod==="DR");
-
-const bsComp = comprasReales.reduce((a,c)=>a+n(c.bs),0);
-const copComp = comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
-const bsVend = ventasReales.reduce((a,v)=>a+n(v.bs),0);
-const copVend = ventasReales.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
-
-// Directo profit: (tasaVenta - tasaCompra) * Bs for each matched pair
-const copVentaDir = ventasDirectas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
-const copCompraDir = comprasDirectas.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
-const utilidadDirecta = copVentaDir - copCompraDir;
-
-const promCompra = calcPromCompraReal(day);
-const promVenta = bsVend>0?copVend/bsVend:0;
-const utilidad = (promVenta-promCompra)*bsVend + utilidadDirecta;
-const quedaBs = inicioBs+bsComp-bsVend;
-const valorPesos = quedaBs*promCompra;
-
-// Totals including directos for display
-const bsCompTotal = bsComp + comprasDirectas.reduce((a,c)=>a+n(c.bs),0);
-const copCompTotal = copComp + copCompraDir;
-const bsVendTotal = bsVend + ventasDirectas.reduce((a,v)=>a+n(v.bs),0);
-const copVendTotal = copVend + copVentaDir;
-
-return {inicioBs,inicioPesos,
-bsComp:bsCompTotal, copComp:copCompTotal,
-bsVend:bsVendTotal, copVend:copVendTotal,
-bsCompReal:bsComp, bsVendReal:bsVend,
-utilidadDirecta,
+const inicioBs=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
+const promInicio=n(day.saldos[0]?.promedio);
+const inicioPesos=inicioBs*promInicio;
+const comprasReales=day.compras.filter(c=>c.cod!=="DR");
+const ventasReales=day.ventas.filter(v=>v.cod!=="DR");
+const comprasDirectas=day.compras.filter(c=>c.cod==="DR");
+const ventasDirectas=day.ventas.filter(v=>v.cod==="DR");
+const bsComp=comprasReales.reduce((a,c)=>a+n(c.bs),0);
+const copComp=comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+const bsVend=ventasReales.reduce((a,v)=>a+n(v.bs),0);
+const copVend=ventasReales.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+const copVentaDir=ventasDirectas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+const copCompraDir=comprasDirectas.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+const utilidadDirecta=copVentaDir-copCompraDir;
+const promCompra=calcPromCompraReal(day);
+const promVenta=bsVend>0?copVend/bsVend:0;
+const utilidad=(promVenta-promCompra)*bsVend+utilidadDirecta;
+const quedaBs=inicioBs+bsComp-bsVend;
+const valorPesos=quedaBs*promCompra;
+const bsCompTotal=bsComp+comprasDirectas.reduce((a,c)=>a+n(c.bs),0);
+const copCompTotal=copComp+copCompraDir;
+const bsVendTotal=bsVend+ventasDirectas.reduce((a,v)=>a+n(v.bs),0);
+const copVendTotal=copVend+copVentaDir;
+return {inicioBs,inicioPesos,bsComp:bsCompTotal,copComp:copCompTotal,bsVend:bsVendTotal,
+copVend:copVendTotal,bsCompReal:bsComp,bsVendReal:bsVend,utilidadDirecta,
 promCompra,promVenta,utilidad,quedaBs,valorPesos};
 }
 
-// ══════════════════════════════════════════════
-// STORAGE (local)
-// ══════════════════════════════════════════════
-function saveLocal(){
-try{ localStorage.setItem("ctrlbs_state", JSON.stringify(state)); }catch{}
-}
-function loadLocal(){
-try{
-const s = localStorage.getItem("ctrlbs_state");
-if(s){ state = JSON.parse(s); return true; }
-}catch{}
-return false;
-}
+// ══ STORAGE ════════════════════════════════════════════════
+function saveLocal(){ try{localStorage.setItem("ctrlbs2",JSON.stringify(state));}catch{} }
+function loadLocal(){ try{const d=localStorage.getItem("ctrlbs2");if(d){state=JSON.parse(d);return true;}}catch{}return false; }
 
-// ══════════════════════════════════════════════
-// GOOGLE SHEETS SYNC
-// ══════════════════════════════════════════════
-function setSyncStatus(status, text){
-const dot = document.getElementById("sync-dot");
-const txt = document.getElementById("sync-text");
-dot.className = "sync-dot " + status;
-txt.textContent = text;
+// ══ SYNC ═══════════════════════════════════════════════════
+function setSyncStatus(s,t){
+const dot=document.getElementById("sync-dot");
+const txt=document.getElementById("sync-text");
+if(dot) dot.className="sync-dot "+s;
+if(txt) txt.textContent=t;
 }
-
 async function syncLoad(){
 if(!state.scriptUrl) return;
-setSyncStatus("loading","Cargando...");
+setSyncStatus("loading","Sincronizando...");
 try{
-const url = state.scriptUrl + "?action=load";
-const res = await fetch(url);
-const data = await res.json();
+const res=await fetch(state.scriptUrl+"?action=load");
+const data=await res.json();
 if(data.ok){
-state.accounts = data.accounts || state.accounts;
-state.days = data.days || state.days;
-state.currentDay= data.currentDay|| 0;
-saveLocal();
-setSyncStatus("ok","Sincronizado ✓");
-render();
-showToast("Datos cargados desde Google Sheets","ok");
-} else {
-setSyncStatus("error","Error al cargar");
-showToast("Error: "+data.error,"err");
+if(data.accounts) state.accounts=data.accounts;
+if(data.days&&data.days.length>0){ state.days=data.days; state.currentDay=data.currentDay||0; }
+saveLocal(); setSyncStatus("ok","Sincronizado ✓"); render();
+} else { setSyncStatus("error","Error al cargar"); }
+}catch(e){ setSyncStatus("error","Sin conexión"); }
 }
-}catch(e){
-setSyncStatus("error","Sin conexión");
-}
-}
-
-let syncTimer = null;
 function syncSave(){
 if(!state.scriptUrl) return;
-// Debounce: wait 1.5s after last change before saving
 clearTimeout(syncTimer);
 setSyncStatus("loading","Guardando...");
-syncTimer = setTimeout(async ()=>{
+syncTimer=setTimeout(async()=>{
 try{
-const res = await fetch(state.scriptUrl, {
-method:"POST",
-body: JSON.stringify({action:"save", state:{
-accounts: state.accounts,
-days: state.days,
-currentDay: state.currentDay,
-}})
-});
-const data = await res.json();
-if(data.ok){
-setSyncStatus("ok","Guardado ✓");
-} else {
-setSyncStatus("error","Error al guardar");
+const res=await fetch(state.scriptUrl,{method:"POST",
+body:JSON.stringify({action:"save",state:{accounts:state.accounts,days:state.days,currentDay:state.currentDay}})});
+const data=await res.json();
+if(data.ok) setSyncStatus("ok","Guardado ✓");
+else setSyncStatus("error","Error al guardar");
+}catch(e){ setSyncStatus("error","Sin conexión"); }
+},1500);
 }
-}catch(e){
-setSyncStatus("error","Sin conexión");
-}
-}, 1500);
-}
+async function syncNow(){ if(!state.scriptUrl){openConfig();return;} await syncLoad(); }
 
-async function syncNow(){
-if(!state.scriptUrl){
-openConfig();
-return;
-}
-await syncLoad();
-}
-
-// ══════════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════════
-function openConfig(){
-document.getElementById("cfg-url").value = state.scriptUrl||"";
-document.getElementById("modal-cfg").style.display="flex";
-}
-function closeCfg(){
-document.getElementById("modal-cfg").style.display="none";
-}
+// ══ CONFIG ═════════════════════════════════════════════════
+function openConfig(){ document.getElementById("cfg-url").value=state.scriptUrl||""; document.getElementById("modal-cfg").style.display="flex"; }
+function closeCfg(){ document.getElementById("modal-cfg").style.display="none"; }
 async function saveCfg(){
-const url = document.getElementById("cfg-url").value.trim();
-if(!url){ showToast("Ingresa la URL del script","err"); return; }
-state.scriptUrl = url;
-saveLocal();
-closeCfg();
-await syncLoad();
+const url=document.getElementById("cfg-url").value.trim();
+if(!url){showToast("Ingresa la URL","err");return;}
+state.scriptUrl=url; saveLocal(); closeCfg(); await syncLoad();
 }
 
-// ══════════════════════════════════════════════
-// DAY MANAGEMENT
-// ══════════════════════════════════════════════
+// ══ DAY MANAGEMENT ═════════════════════════════════════════
+function emptyDay(prevDay=null){
+const promPrev=prevDay?calcPromCompraReal(prevDay):0;
+return{
+label:todayStr(),
+saldos:state.accounts.map(a=>{
+let inicioBs=0;
+if(prevDay){const ps=prevDay.saldos.find(s=>s.cod===a.cod);if(ps) inicioBs=calcStock(ps,prevDay.ventas,prevDay.compras);}
+return{cod:a.cod,inicioBs,promedio:promPrev};
+}),
+ventas:[{nombre:"",cod:"",tasa:"",bs:"",done:false}],
+compras:[{nombre:"",cod:"",tasa:"",bs:"",done:false}],
+};
+}
 function addDay(){
-const prev = state.days.length>0?state.days[state.days.length-1]:null;
+const prev=state.days.length>0?state.days[state.days.length-1]:null;
 state.days.push(emptyDay(prev));
-state.currentDay = state.days.length-1;
+state.currentDay=state.days.length-1;
+clienteFiltro=""; directoData={cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
 saveLocal(); syncSave(); render();
 }
-
 function setCurrentDay(i){
-state.currentDay = i;
-clienteFiltro = "";
-directoData = {cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
-saveLocal(); render();
+state.currentDay=i; clienteFiltro="";
+directoData={cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
+saveLocal(); renderPage(); renderDayList();
 }
-
-function updateDayLabel(i, val){
-state.days[i].label = val;
-saveLocal(); syncSave();
-// update tab text only
-const tabs = document.querySelectorAll(".day-tab");
-if(tabs[i]) tabs[i].textContent = val||`Día ${String(i+1).padStart(2,"0")}`;
-}
-
 function resetMonth(){
 if(!confirm("¿Resetear el mes? Se borrarán todos los datos.")) return;
-state.days = [emptyDay()];
-state.currentDay = 0;
+state.days=[emptyDay()]; state.currentDay=0;
 saveLocal(); syncSave(); render();
 }
 
-// ══════════════════════════════════════════════
-// SALDOS
-// ══════════════════════════════════════════════
+// ══ UPDATES ════════════════════════════════════════════════
 function updatePromedio(val){
-const day = state.days[state.currentDay];
-day.saldos = day.saldos.map(s=>({...s, promedio: val}));
-saveLocal(); syncSave(); renderResumen();
-updateSaldoCalcs();
+const day=state.days[state.currentDay];
+const num=rawNum(val)||0;
+day.saldos=day.saldos.map(s=>({...s,promedio:num}));
+saveLocal(); syncSave(); renderResumenBlock(); updateSaldoCalcs();
 }
-
-function updateInicio(idx, val){
-state.days[state.currentDay].saldos[idx].inicioBs = val;
-saveLocal(); syncSave();
-updateSaldoCalcs();
-renderResumen();
+function updateInicio(idx,val){
+state.days[state.currentDay].saldos[idx].inicioBs=rawNum(val)||0;
+saveLocal(); syncSave(); updateSaldoCalcs(); renderResumenBlock();
 }
-
 function updateSaldoCalcs(){
-const day = state.days[state.currentDay];
+const day=state.days[state.currentDay];
 day.saldos.forEach((s,i)=>{
-const pesos = n(s.inicioBs)*n(s.promedio);
-const compra = day.compras.filter(c=>c.cod===s.cod).reduce((a,c)=>a+n(c.bs),0);
-const venta = day.ventas.filter(v=>v.cod===s.cod).reduce((a,v)=>a+n(v.bs),0);
-const stock = n(s.inicioBs)+compra-venta;
-const row = document.getElementById(`saldo-row-${i}`);
+const pesos=n(s.inicioBs)*n(s.promedio);
+const compra=day.compras.filter(c=>c.cod===s.cod&&c.cod!=="DR").reduce((a,c)=>a+n(c.bs),0);
+const venta=day.ventas.filter(v=>v.cod===s.cod&&v.cod!=="DR").reduce((a,v)=>a+n(v.bs),0);
+const stock=n(s.inicioBs)+compra-venta;
+const row=document.getElementById(`sr-${i}`);
 if(!row) return;
-row.querySelector(".td-pesos").textContent = fmt(pesos,0);
-row.querySelector(".td-compra").textContent = fmt(compra,2);
-row.querySelector(".td-venta").textContent = fmt(venta,2);
-const stEl = row.querySelector(".td-stock");
-stEl.textContent = fmt(stock,2);
-stEl.className = "td-stock td-gold" + (stock<0?" neg":"");
+row.querySelector(".s-pesos").textContent=fmt(pesos,0);
+row.querySelector(".s-compra").textContent=fmt(compra,2);
+row.querySelector(".s-venta").textContent=fmt(venta,2);
+const st=row.querySelector(".s-stock");
+st.textContent=fmt(stock,2); st.className="s-stock td-cyan"+(stock<0?" neg":"");
 });
-// totals
-const totInicio = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
-const totPesos = day.saldos.reduce((a,s)=>a+n(s.inicioBs)*n(s.promedio),0);
-const totCompra = day.compras.reduce((a,c)=>a+n(c.bs),0);
-const totVenta = day.ventas.reduce((a,v)=>a+n(v.bs),0);
-const totStock = day.saldos.reduce((a,s)=>a+calcStock(s,day.ventas,day.compras),0);
-const trow = document.getElementById("saldo-tfoot");
-if(trow){
-trow.cells[1].textContent = fmt(totInicio,2);
-trow.cells[2].textContent = fmt(totPesos,0);
-trow.cells[3].textContent = fmt(totCompra,2);
-trow.cells[4].textContent = fmt(totVenta,2);
-trow.cells[5].textContent = fmt(totStock,2);
-}
+const totI=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
+const totP=day.saldos.reduce((a,s)=>a+n(s.inicioBs)*n(s.promedio),0);
+const totC=day.compras.filter(c=>c.cod!=="DR").reduce((a,c)=>a+n(c.bs),0);
+const totV=day.ventas.filter(v=>v.cod!=="DR").reduce((a,v)=>a+n(v.bs),0);
+const totS=day.saldos.reduce((a,s)=>a+calcStock(s,day.ventas,day.compras),0);
+const tf=document.getElementById("saldo-foot");
+if(tf){tf.cells[1].textContent=fmt(totI,2);tf.cells[2].textContent=fmt(totP,0);
+tf.cells[3].textContent=fmt(totC,2);tf.cells[4].textContent=fmt(totV,2);tf.cells[5].textContent=fmt(totS,2);}
 }
 
-// ══════════════════════════════════════════════
-// MOVIMIENTOS (ventas / compras)
-// ══════════════════════════════════════════════
 function reRenderMov(tipo){
-const day = state.days[state.currentDay];
-const cardId = tipo === "ventas" ? "mov-card-ventas" : "mov-card-compras";
-const el = document.getElementById(cardId);
-if(el){
-el.outerHTML = renderMovHTML(day, tipo);
+const day=state.days[state.currentDay];
+const el=document.getElementById("mov-"+tipo);
+if(el) el.outerHTML=renderMovHTML(day,tipo);
 }
-}
-
-function addMovRow(tipo){
-const day = state.days[state.currentDay];
-day[tipo].push({nombre:"",cod:"",tasa:"",bs:"",done:false});
-saveLocal(); syncSave();
-reRenderMov(tipo);
-renderResumen();
-updateSaldoCalcs();
-}
-
-function delMovRow(tipo, idx){
-const day = state.days[state.currentDay];
-day[tipo].splice(idx,1);
-saveLocal(); syncSave();
-reRenderMov(tipo);
-renderResumen();
-updateSaldoCalcs();
-}
-
-function toggleDone(tipo, idx){
-const day = state.days[state.currentDay];
-day[tipo][idx].done = !day[tipo][idx].done;
-saveLocal(); syncSave();
-const row = document.getElementById(`mov-row-${tipo}-${idx}`);
-if(row) row.classList.toggle("row-done", day[tipo][idx].done);
-const cb = document.getElementById(`chk-${tipo}-${idx}`);
-if(cb) cb.textContent = day[tipo][idx].done ? "✅" : "☐";
-}
-
-function updateMov(tipo, idx, field, val){
-const day = state.days[state.currentDay];
-day[tipo][idx][field] = val;
-// auto-fill cuenta display
+function updateMov(tipo,idx,field,val){
+const day=state.days[state.currentDay];
+if(field==="bs"||field==="tasa") day[tipo][idx][field]=rawNum(val)||val;
+else day[tipo][idx][field]=val;
 if(field==="cod"){
-const acc = state.accounts.find(a=>a.cod===val.toUpperCase());
-const cuentaEl = document.getElementById(`${tipo}-cuenta-${idx}`);
-if(cuentaEl) cuentaEl.textContent = acc?.nombre||"";
+const acc=state.accounts.find(a=>a.cod===val.toUpperCase());
+const el=document.getElementById(`${tipo}-cta-${idx}`);
+if(el) el.textContent=acc?.nombre||"";
 }
-// recalc COP cell
-const copEl = document.getElementById(`${tipo}-cop-${idx}`);
+const copEl=document.getElementById(`${tipo}-cop-${idx}`);
+const copMob=document.getElementById(`${tipo}-cop-mob-${idx}`);
 if(copEl){
-const r = day[tipo][idx];
-copEl.textContent = n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):"";
+const r=day[tipo][idx];
+const copVal=n(r.bs)&&n(r.tasa)?n(r.bs)*n(r.tasa):0;
+const copFmt=copVal?fmt(copVal,0):"";
+copEl.textContent=copFmt;
+if(copMob) copMob.textContent=copVal?"= "+fmtCOP(copVal):"";
 }
-saveLocal(); syncSave();
-renderMovTotals(tipo);
-renderResumen();
-updateSaldoCalcs();
+saveLocal(); syncSave(); renderMovTotals(tipo); renderResumenBlock(); updateSaldoCalcs();
 }
-
 function renderMovTotals(tipo){
-const day = state.days[state.currentDay];
-const rows = day[tipo];
-const totBs = rows.reduce((a,r)=>a+n(r.bs),0);
-const totCop = rows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
-const tfBs = document.getElementById(`${tipo}-tot-bs`);
-const tfCop = document.getElementById(`${tipo}-tot-cop`);
-if(tfBs) tfBs.textContent = fmt(totBs,2);
-if(tfCop) tfCop.textContent = fmt(totCop,0);
+const day=state.days[state.currentDay];
+const totBs=day[tipo].reduce((a,r)=>a+n(r.bs),0);
+const totCop=day[tipo].reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
+const eb=document.getElementById(`${tipo}-tot-bs`);
+const ec=document.getElementById(`${tipo}-tot-cop`);
+if(eb) eb.textContent=fmt(totBs,2);
+if(ec) ec.textContent=fmt(totCop,0);
+}
+function addMovRow(tipo){
+const day=state.days[state.currentDay];
+day[tipo].push({nombre:"",cod:"",tasa:"",bs:"",done:false});
+saveLocal(); syncSave(); reRenderMov(tipo); renderResumenBlock(); updateSaldoCalcs();
+}
+function delMovRow(tipo,idx){
+const day=state.days[state.currentDay];
+day[tipo].splice(idx,1);
+saveLocal(); syncSave(); reRenderMov(tipo); renderResumenBlock(); updateSaldoCalcs();
+}
+function toggleDone(tipo,idx){
+const day=state.days[state.currentDay];
+day[tipo][idx].done=!day[tipo][idx].done;
+saveLocal(); syncSave();
+const row=document.getElementById(`mov-row-${tipo}-${idx}`);
+if(row) row.style.opacity=day[tipo][idx].done?"0.5":"1";
+const cb=document.getElementById(`chk-${tipo}-${idx}`);
+if(cb) cb.textContent=day[tipo][idx].done?"✅":"☐";
 }
 
-// ══════════════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════════════
+// ══ DIRECTO ════════════════════════════════════════════════
+function updateDirecto(field,val){
+if(field==="bs"||field==="tasaVenta"||field==="tasaCompra") directoData[field]=rawNum(val)||val;
+else directoData[field]=val;
+renderDirectoPreview();
+}
+function renderDirectoPreview(){
+const bs=n(directoData.bs),tv=n(directoData.tasaVenta),tc=n(directoData.tasaCompra);
+const el=document.getElementById("directo-preview");
+if(!el) return;
+el.innerHTML=`<div class="dp-row"><span class="dp-label">COP que recibes</span><span class="dp-val td-blue">${fmtCOP(bs*tv)}</span></div>
+<div class="dp-row"><span class="dp-label">COP que pagas</span><span class="dp-val td-green">${fmtCOP(bs*tc)}</span></div>
+<div class="dp-row" style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px">
+<span class="dp-label">GANANCIA</span><span class="dp-val dp-ganancia">${fmtCOP(bs*tv-bs*tc)}</span></div>`;
+}
+function guardarDirecto(){
+const bs=n(directoData.bs),tv=n(directoData.tasaVenta),tc=n(directoData.tasaCompra);
+if(!bs||!tv||!tc){showToast("Completa Bs, tasa venta y compra","err");return;}
+if(!directoData.cliente){showToast("Ingresa el cliente","err");return;}
+if(!directoData.proveedor){showToast("Ingresa el proveedor","err");return;}
+const day=state.days[state.currentDay];
+day.ventas.push({nombre:directoData.cliente,cod:directoData.codProv||"DR",tasa:tv,bs,done:false});
+day.compras.push({nombre:directoData.proveedor,cod:directoData.codProv||"DR",tasa:tc,bs,done:false});
+directoData={cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
+saveLocal(); syncSave(); reRenderMov("ventas"); reRenderMov("compras");
+renderResumenBlock(); updateSaldoCalcs();
+const el=document.getElementById("directo-form");
+if(el) el.outerHTML=renderDirectoHTML();
+showToast("Operación directa registrada ✓","ok");
+}
+
+// ══ ACCOUNTS ═══════════════════════════════════════════════
+function openAccMgr(){
+document.getElementById("acc-list").innerHTML=state.accounts.map(a=>`
+<div class="acc-item">
+<span><strong style="color:var(--cyan)">${a.cod}</strong> — ${a.nombre}</span>
+<button class="del-btn" onclick="removeAccount('${a.cod}')">×</button>
+</div>`).join("");
+document.getElementById("modal-acc").style.display="flex";
+}
+function closeAccMgr(){ document.getElementById("modal-acc").style.display="none"; }
+function addAccount(){
+const cod=document.getElementById("new-cod").value.trim().toUpperCase();
+const nom=document.getElementById("new-nom").value.trim().toUpperCase();
+if(!cod||!nom){showToast("Completa COD y Nombre","err");return;}
+if(state.accounts.find(a=>a.cod===cod)){showToast("Ese COD ya existe","err");return;}
+state.accounts.push({cod,nombre:nom});
+state.days.forEach(day=>day.saldos.push({cod,inicioBs:0,promedio:day.saldos[0]?.promedio||0}));
+saveLocal(); syncSave(); openAccMgr(); render(); showToast(`Cuenta ${cod} agregada`,"ok");
+}
+function removeAccount(cod){
+if(!confirm(`¿Eliminar cuenta ${cod}?`)) return;
+state.accounts=state.accounts.filter(a=>a.cod!==cod);
+state.days.forEach(day=>day.saldos=day.saldos.filter(s=>s.cod!==cod));
+saveLocal(); syncSave(); openAccMgr(); render();
+}
+
+// ══ TOAST ══════════════════════════════════════════════════
+function showToast(msg,type="ok"){
+const el=document.getElementById("toast");
+el.textContent=msg; el.className=`toast ${type}`;
+clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.add("hide"),3000);
+}
+
+// ══ RENDER ═════════════════════════════════════════════════
 function setView(v){
-currentView = v;
-document.getElementById("vtab-dia").classList.toggle("active",v==="dia");
-document.getElementById("vtab-mes").classList.toggle("active",v==="mes");
-document.getElementById("day-tabs").style.display = v==="dia"?"flex":"none";
-renderMain();
+currentView=v;
+["dia","mes"].forEach(x=>{
+const n=document.getElementById("nav-"+x);
+if(n) n.classList.toggle("active",x===v);
+});
+renderPage();
 }
-
-function render(){
-renderTabs();
-renderMain();
+function setMobActive(el){
+document.querySelectorAll(".mob-btn").forEach(b=>b.classList.remove("active"));
+el.classList.add("active");
 }
+function render(){ renderDayList(); renderPage(); }
 
-function renderTabs(){
-const container = document.getElementById("day-tabs");
-container.innerHTML = "";
+function renderDayList(){
+const container=document.getElementById("day-list");
+if(!container) return;
+container.innerHTML="";
 state.days.forEach((d,i)=>{
-const wrap = document.createElement("div");
-wrap.className = "day-tab-wrap";
-const btn = document.createElement("button");
-btn.className = "day-tab" + (i===state.currentDay?" active":"");
-btn.textContent = d.label||`Día ${String(i+1).padStart(2,"0")}`;
-btn.onclick = ()=>setCurrentDay(i);
+const wrap=document.createElement("div");
+wrap.className="day-item";
+const btn=document.createElement("button");
+btn.className="day-btn"+(i===state.currentDay?" active":"");
+btn.innerHTML=`<span>${d.label||`Día ${String(i+1).padStart(2,"0")}`}</span><span class="day-num">${String(i+1).padStart(2,"0")}</span>`;
+btn.onclick=()=>setCurrentDay(i);
 wrap.appendChild(btn);
 if(i===state.currentDay){
-const inp = document.createElement("input");
-inp.className = "day-label-input";
-inp.value = d.label||"";
-inp.placeholder = "ej: 12/05 o Lunes";
-inp.oninput = e=>updateDayLabel(i,e.target.value);
+const inp=document.createElement("input");
+inp.className="day-label-inp"; inp.value=d.label||""; inp.placeholder="Nombre o fecha";
+inp.oninput=e=>{
+state.days[i].label=e.target.value; saveLocal(); syncSave();
+btn.querySelector("span").textContent=e.target.value||`Día ${String(i+1).padStart(2,"0")}`;
+};
 wrap.appendChild(inp);
 }
 container.appendChild(wrap);
 });
 }
 
-function renderMain(){
-const main = document.getElementById("main");
-if(currentView==="mes"){
-main.innerHTML = renderMesHTML();
-return;
-}
-if(state.days.length===0){ main.innerHTML="<p style='color:var(--dim);padding:20px'>Sin días</p>"; return; }
-const day = state.days[state.currentDay];
-main.innerHTML = `
+function renderPage(){
+const page=document.getElementById("page");
+if(!page) return;
+if(state.days.length===0){page.innerHTML="<p style='color:var(--dim);padding:20px'>Sin días — crea el primero</p>";return;}
+if(currentView==="mes"){ page.innerHTML=renderMesHTML(); return; }
+const day=state.days[state.currentDay];
+page.innerHTML=`
 ${renderSaldosHTML(day)}
-<div class="mov-grid">
+<div class="mov-grid-wrap">
 ${renderMovHTML(day,"ventas")}
 ${renderMovHTML(day,"compras")}
 </div>
@@ -792,41 +916,47 @@ ${renderClienteHTML()}
 `;
 }
 
-// ── SALDOS ──
+// Partial re-renders
+function renderResumenBlock(){
+const day=state.days[state.currentDay];
+const el=document.getElementById("resumen-block");
+if(el) el.outerHTML=renderResumenHTML(day);
+}
+
+// SALDOS
 function renderSaldosHTML(day){
-const prom = n(day.saldos[0]?.promedio);
-let rows = "";
+const prom=n(day.saldos[0]?.promedio);
+let rows="";
 day.saldos.forEach((s,i)=>{
-const acc = state.accounts.find(a=>a.cod===s.cod);
-const pesos = n(s.inicioBs)*prom;
-const compra = day.compras.filter(c=>c.cod===s.cod).reduce((a,c)=>a+n(c.bs),0);
-const venta = day.ventas.filter(v=>v.cod===s.cod).reduce((a,v)=>a+n(v.bs),0);
-const stock = n(s.inicioBs)+compra-venta;
-rows += `<tr class="${i%2===0?"alt":""}" id="saldo-row-${i}">
-<td><span class="cod-badge">${s.cod}</span></td>
-<td class="td-l" style="font-size:11px">${acc?.nombre||""}</td>
+const acc=state.accounts.find(a=>a.cod===s.cod);
+const pesos=n(s.inicioBs)*prom;
+const compra=day.compras.filter(c=>c.cod===s.cod&&c.cod!=="DR").reduce((a,c)=>a+n(c.bs),0);
+const venta=day.ventas.filter(v=>v.cod===s.cod&&v.cod!=="DR").reduce((a,v)=>a+n(v.bs),0);
+const stock=n(s.inicioBs)+compra-venta;
+rows+=`<tr id="sr-${i}">
+<td><span class="cod-tag">${s.cod}</span></td>
+<td class="td-l" style="font-size:11px;color:var(--dim2)">${acc?.nombre||""}</td>
 <td><input class="ni-fmt" inputmode="decimal"
 value="${fmtInput(n(s.inicioBs))}" placeholder="0"
 oninput="let v=rawNum(this.value);updateInicio(${i},v)"
 onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/></td>
-<td class="td-pesos td-dim">${fmt(pesos,0)}</td>
-<td class="td-compra td-green">${fmt(compra,2)}</td>
-<td class="td-venta td-blue">${fmt(venta,2)}</td>
-<td class="td-stock td-gold${stock<0?" neg":""}">${fmt(stock,2)}</td>
+<td class="s-pesos td-dim">${fmt(pesos,0)}</td>
+<td class="s-compra td-green">${fmt(compra,2)}</td>
+<td class="s-venta td-blue">${fmt(venta,2)}</td>
+<td class="s-stock td-cyan${stock<0?" neg":""}">${fmt(stock,2)}</td>
 </tr>`;
 });
-const totInicio = day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
-const totPesos = day.saldos.reduce((a,s)=>a+n(s.inicioBs)*prom,0);
-const totCompra = day.compras.reduce((a,c)=>a+n(c.bs),0);
-const totVenta = day.ventas.reduce((a,v)=>a+n(v.bs),0);
-const totStock = day.saldos.reduce((a,s)=>a+calcStock(s,day.ventas,day.compras),0);
+const totI=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
+const totP=day.saldos.reduce((a,s)=>a+n(s.inicioBs)*prom,0);
+const totC=day.compras.filter(c=>c.cod!=="DR").reduce((a,c)=>a+n(c.bs),0);
+const totV=day.ventas.filter(v=>v.cod!=="DR").reduce((a,v)=>a+n(v.bs),0);
+const totS=day.saldos.reduce((a,s)=>a+calcStock(s,day.ventas,day.compras),0);
 return `<div class="card">
-<div class="card-header hdr-saldos">
-<span>💰 SALDOS</span>
+<div class="card-header">
+<span class="card-title t-cyan">💰 SALDOS</span>
 <div class="prom-wrap">
-Promedio inicial:&nbsp;<strong>${fmt(prom,4)}</strong>&nbsp;
-<input class="prom-inp ni-fmt" inputmode="decimal"
-value="${fmtInput(prom)}" placeholder="0"
+Promedio inicial: <span class="prom-val">${fmt(prom,4)}</span>
+<input class="prom-inp" inputmode="decimal" value="${fmtInput(prom)}" placeholder="0"
 oninput="let v=rawNum(this.value);updatePromedio(v)"
 onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/>
 </div>
@@ -834,231 +964,364 @@ onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumF
 <div class="tbl-wrap"><table>
 <thead><tr><th>COD</th><th>CUENTA</th><th>INICIO Bs</th><th>PESOS</th><th>COMPRA</th><th>VENTA</th><th>STOCK</th></tr></thead>
 <tbody>${rows}</tbody>
-<tfoot><tr id="saldo-tfoot"><td colspan="2">TOTAL</td>
-<td>${fmt(totInicio,2)}</td><td>${fmt(totPesos,0)}</td>
-<td class="td-green">${fmt(totCompra,2)}</td><td class="td-blue">${fmt(totVenta,2)}</td>
-<td class="td-gold">${fmt(totStock,2)}</td>
+<tfoot><tr id="saldo-foot"><td colspan="2">TOTAL</td>
+<td>${fmt(totI,2)}</td><td>${fmt(totP,0)}</td>
+<td class="td-green">${fmt(totC,2)}</td><td class="td-blue">${fmt(totV,2)}</td>
+<td class="td-cyan">${fmt(totS,2)}</td>
 </tr></tfoot>
 </table></div>
 </div>`;
 }
 
-// ── MOV TABLE ──
-function renderMovHTML(day, tipo){
-const isV = tipo==="ventas";
-const hdr = isV?"📤 VENTAS (salida de Bs)":"📥 COMPRAS (entrada de Bs)";
-const cls = isV?"hdr-ventas":"hdr-compras";
-const rows = day[tipo];
-const totBs = rows.reduce((a,r)=>a+n(r.bs),0);
-const totCop= rows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
+// MOV TABLE
+function renderMovHTML(day,tipo){
+const isV=tipo==="ventas";
+const title=isV?"📤 VENTAS":"📥 COMPRAS";
+const tclass=isV?"t-blue":"t-green";
+const rows=day[tipo];
+const totBs=rows.reduce((a,r)=>a+n(r.bs),0);
+const totCop=rows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
 let trows="";
 rows.forEach((r,i)=>{
-const acc = state.accounts.find(a=>a.cod===r.cod);
-const cop = n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):"";
-trows+=`<tr class="${i%2===0?"alt":""} ${r.done?"row-done":""}" id="mov-row-${tipo}-${i}">
-<td><button class="chk-btn" id="chk-${tipo}-${i}" onclick="toggleDone('${tipo}',${i})">${r.done?"✅":"☐"}</button></td>
+const acc=state.accounts.find(a=>a.cod===r.cod);
+const cop=n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):"";
+trows+=`<tr id="mov-row-${tipo}-${i}" style="opacity:${r.done?'.5':'1'}">
+<td><button class="del-btn" id="chk-${tipo}-${i}" onclick="toggleDone('${tipo}',${i})">${r.done?"✅":"☐"}</button></td>
 <td><input class="ti" value="${r.nombre}" placeholder="Nombre"
 oninput="updateMov('${tipo}',${i},'nombre',this.value)"/></td>
-<td><input class="ni ni-cod" value="${r.cod}" placeholder="COD"
+<td><input class="ni" style="width:52px;text-align:center" value="${r.cod}" placeholder="COD"
 oninput="updateMov('${tipo}',${i},'cod',this.value.toUpperCase())" list="cods-list"/></td>
-<td class="td-l" id="${tipo}-cuenta-${i}" style="font-size:10px;color:var(--dim)">${acc?.nombre||""}</td>
-<td><input class="ni-fmt" inputmode="decimal"
-value="${fmtInput(r.tasa)}" placeholder="tasa"
+<td class="td-l hide-mob" id="${tipo}-cta-${i}" style="font-size:10px;color:var(--dim)">${acc?.nombre||""}</td>
+<td><input class="ni-fmt" inputmode="decimal" value="${fmtInput(r.tasa)}" placeholder="tasa"
 oninput="let v=rawNum(this.value);updateMov('${tipo}',${i},'tasa',v)"
 onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/></td>
-<td><input class="ni-fmt" inputmode="decimal"
-value="${fmtInput(r.bs)}" placeholder="bs"
+<td>
+<input class="ni-fmt" inputmode="decimal" value="${fmtInput(r.bs)}" placeholder="bs"
 oninput="let v=rawNum(this.value);updateMov('${tipo}',${i},'bs',v)"
-onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/></td>
-<td class="td-dim td-mono" id="${tipo}-cop-${i}">${cop}</td>
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/>
+${cop?`<div class="mob-cop" id="${tipo}-cop-mob-${i}">= ${fmtCOP(n(r.bs)*n(r.tasa))}</div>`:`<div class="mob-cop" id="${tipo}-cop-mob-${i}"></div>`}
+</td>
+<td class="td-dim hide-mob" id="${tipo}-cop-${i}">${cop}</td>
 <td><button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button></td>
 </tr>`;
 });
-return `<div class="card" id="mov-card-${tipo}">
-<div class="card-header ${cls}">${hdr}</div>
+return `<div class="card" id="mov-${tipo}">
 <datalist id="cods-list">${state.accounts.map(a=>`<option value="${a.cod}">`).join("")}</datalist>
+<div class="card-header">
+<span class="card-title ${tclass}">${title}</span>
+</div>
 <div class="tbl-wrap"><table>
-<thead><tr><th></th><th>NOMBRE</th><th>COD</th><th>CUENTA</th><th>TASA</th><th>Bs</th><th>PESOS</th><th></th></tr></thead>
+<thead><tr><th></th><th>NOMBRE</th><th>COD</th><th class="hide-mob">CUENTA</th><th>TASA</th><th>Bs</th><th class="hide-mob">PESOS</th><th></th></tr></thead>
 <tbody>${trows}</tbody>
-<tfoot><tr><td colspan="5">TOTAL</td>
+<tfoot><tr><td colspan="4">TOTAL</td>
 <td id="${tipo}-tot-bs">${fmt(totBs,2)}</td>
-<td id="${tipo}-tot-cop">${fmt(totCop,0)}</td>
-<td></td>
+<td class="hide-mob" id="${tipo}-tot-cop">${fmt(totCop,0)}</td><td></td>
 </tr></tfoot>
 </table></div>
+<div class="mob-totals">
+<span>Total Bs: <strong style="color:var(--cyan)">${fmt(totBs,2)}</strong></span>
+<span>COP: <strong style="color:var(--text)">${fmtCOP(totCop)}</strong></span>
+</div>
 <button class="add-row-btn" onclick="addMovRow('${tipo}')">+ Agregar fila</button>
 </div>`;
 }
 
-// ── RESUMEN DÍA ──
-function renderResumen(){
-const day = state.days[state.currentDay];
-const el = document.getElementById("resumen-card");
-if(el) el.outerHTML = renderResumenHTML(day);
-}
-
+// RESUMEN DÍA
 function renderResumenHTML(day){
-const r = calcResumen(day);
-const rows=[
-["INICIO EN Bs", fmt(r.inicioBs,2), "neutral"],
-["INICIO EN PESOS", fmtCOP(r.inicioPesos), "neutral"],
-["Bs COMPRADOS (real)", fmt(r.bsCompReal,2), "compra"],
-["Bs COMPRADOS EN PESOS", fmtCOP(r.copComp), "compra"],
-["Bs VENDIDOS (real)", fmt(r.bsVendReal,2), "venta"],
-["Bs VENDIDOS EN PESOS", fmtCOP(r.copVend), "venta"],
-["PROMEDIO COMPRA REAL", fmt(r.promCompra,4), "compra"],
-["PROMEDIO VENTA", fmt(r.promVenta,4), "venta"],
-["UTILIDAD DIRECTA (DR)", fmtCOP(r.utilidadDirecta), r.utilidadDirecta>=0?"compra":"loss"],
-["UTILIDAD TOTAL (COP)", fmtCOP(r.utilidad), r.utilidad>=0?"win":"loss"],
-["QUEDA EN Bs", fmt(r.quedaBs,2), "neutral"],
-["VALOR EN PESOS (costo)", fmtCOP(r.valorPesos), "neutral"],
+const r=calcResumen(day);
+const items=[
+["INICIO EN Bs",fmt(r.inicioBs,2),""],
+["INICIO EN PESOS",fmtCOP(r.inicioPesos),""],
+["Bs COMPRADOS (real)",fmt(r.bsCompReal,2),"compra"],
+["Bs COMPRADOS EN PESOS",fmtCOP(r.copComp),"compra"],
+["Bs VENDIDOS (real)",fmt(r.bsVendReal,2),"venta"],
+["Bs VENDIDOS EN PESOS",fmtCOP(r.copVend),"venta"],
+["PROMEDIO COMPRA REAL",fmt(r.promCompra,4),"compra"],
+["PROMEDIO VENTA",fmt(r.promVenta,4),"venta"],
+["UTILIDAD DIRECTA (DR)",fmtCOP(r.utilidadDirecta),r.utilidadDirecta>=0?"compra":"loss"],
+["UTILIDAD TOTAL",fmtCOP(r.utilidad),r.utilidad>=0?"win":"loss"],
+["QUEDA EN Bs",fmt(r.quedaBs,2),""],
+["VALOR EN PESOS (costo)",fmtCOP(r.valorPesos),""],
 ];
-return `<div class="card" id="resumen-card">
-<div class="card-header hdr-resumen">📊 RESUMEN DEL DÍA</div>
+return `<div class="card" id="resumen-block">
+<div class="card-header"><span class="card-title">📊 RESUMEN DEL DÍA</span></div>
 <div class="res-grid">
-${rows.map(([l,v,t])=>`<div class="res-row res-${t}">
-<span class="res-label">${l}</span>
-<span class="res-val">${v||"—"}</span>
+${items.map(([l,v,t])=>`<div class="res-item ${t}">
+<div class="res-label">${l}</div>
+<div class="res-val">${v||"—"}</div>
 </div>`).join("")}
 </div>
 </div>`;
 }
 
-// ── RESUMEN MES ──
-function renderMesHTML(){
-const rows = state.days.map((day,i)=>({...calcResumen(day), label:day.label||`Día ${String(i+1).padStart(2,"0")}`}));
-const totBC = rows.reduce((a,r)=>a+r.bsComp,0);
-const totCC = rows.reduce((a,r)=>a+r.copComp,0);
-const totBV = rows.reduce((a,r)=>a+r.bsVend,0);
-const totCV = rows.reduce((a,r)=>a+r.copVend,0);
-const totU = rows.reduce((a,r)=>a+r.utilidad,0);
-const pCA = rows.filter(r=>r.promCompra>0);
-const pVA = rows.filter(r=>r.promVenta>0);
-const avgPC = pCA.length?pCA.reduce((a,r)=>a+r.promCompra,0)/pCA.length:0;
-const avgPV = pVA.length?pVA.reduce((a,r)=>a+r.promVenta,0)/pVA.length:0;
-const last = rows[rows.length-1]||{};
+// DIRECTO
+function renderDirectoHTML(){
+return `<div class="card" id="directo-form">
+<div class="card-header"><span class="card-title t-gold">⚡ OPERACIÓN DIRECTA (DR)</span></div>
+<div class="directo-grid">
+<div class="df"><div class="df-label">CLIENTE</div>
+<input class="df-inp" placeholder="Nombre cliente" value="${directoData.cliente}"
+oninput="updateDirecto('cliente',this.value)"/></div>
+<div class="df"><div class="df-label">PROVEEDOR</div>
+<input class="df-inp" placeholder="Nombre proveedor" value="${directoData.proveedor}"
+oninput="updateDirecto('proveedor',this.value)"/></div>
+<div class="df"><div class="df-label">COD CUENTA</div>
+<input class="df-inp" value="${directoData.codProv}" list="cods-list"
+oninput="updateDirecto('codProv',this.value.toUpperCase())"/></div>
+<div class="df"><div class="df-label">Bs</div>
+<input class="df-inp" inputmode="decimal" placeholder="0" value="${directoData.bs}"
+oninput="updateDirecto('bs',this.value)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/></div>
+<div class="df"><div class="df-label">TASA VENTA (cobras)</div>
+<input class="df-inp" inputmode="decimal" placeholder="0,0000" value="${directoData.tasaVenta}"
+oninput="updateDirecto('tasaVenta',this.value)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/></div>
+<div class="df"><div class="df-label">TASA COMPRA (pagas)</div>
+<input class="df-inp" inputmode="decimal" placeholder="0,0000" value="${directoData.tasaCompra}"
+oninput="updateDirecto('tasaCompra',this.value)"
+onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/></div>
+</div>
+<div class="directo-preview" id="directo-preview">
+<div class="dp-row"><span class="dp-label">Completa los campos para ver la ganancia</span></div>
+</div>
+<button class="reg-btn" onclick="guardarDirecto()">⚡ Registrar operación directa</button>
+</div>`;
+}
 
-const kpis=`<div class="kpi-grid">
-<div class="kpi-card kpi-green">
-<div class="kpi-label">UTILIDAD TOTAL MES</div>
-<div class="kpi-val">${fmtCOP(totU)}</div>
+// CLIENTE
+let clienteTimer=null;
+function setClienteFiltro(val){
+clienteFiltro=val;
+clearTimeout(clienteTimer);
+clienteTimer=setTimeout(()=>renderClienteResults(),300);
+}
+function renderClienteBlock(){
+const el=document.getElementById("cliente-block");
+if(el) el.outerHTML=renderClienteHTML();
+}
+function renderClienteResults(){
+const el=document.getElementById("cliente-results");
+if(el) el.innerHTML=buildClienteResults();
+}
+function buildClienteResults(){
+const day=state.days[state.currentDay];
+const allNames=[...day.ventas,...day.compras].filter(r=>r.nombre&&n(r.bs)>0)
+.map(r=>r.nombre).filter((v,i,a)=>v&&a.indexOf(v)===i).sort();
+const filtV=clienteFiltro?day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(v.bs)>0):[];
+const filtC=clienteFiltro?day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(c.bs)>0):[];
+const tVBs=filtV.reduce((a,v)=>a+n(v.bs),0),tVCop=filtV.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+const tCBs=filtC.reduce((a,c)=>a+n(c.bs),0),tCCop=filtC.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+const hasData=filtV.length>0||filtC.length>0;
+if(!clienteFiltro) return `<div class="empty-msg">Escribe el nombre para ver sus transacciones</div>`;
+if(!hasData) return `<div class="empty-msg">Sin transacciones para "<strong>${clienteFiltro}</strong>"</div>`;
+let vs="",cs="",neto="";
+if(filtV.length>0){
+let rows="";
+filtV.forEach((v,i)=>{const cop=n(v.bs)*n(v.tasa);rows+=`<tr><td>${i+1}</td><td class="td-green">${fmt(n(v.bs),2)}</td><td>${fmt(n(v.tasa),4)}</td><td class="td-blue">${fmtCOP(cop)}</td><td style="font-size:10px;color:var(--dim)">${state.accounts.find(a=>a.cod===v.cod)?.nombre||v.cod||"—"}</td></tr>`;});
+vs=`<div class="fac-section-title t-blue">📤 VENTAS — Lo que me debe</div>
+<table><thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>COP</th><th>CUENTA</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="fac-total-row"><div><div style="font-size:9px;color:var(--dim)">TOTAL Bs</div><div class="td-green" style="font-family:var(--mono);font-weight:700">${fmt(tVBs,2)}</div></div>
+<div style="text-align:right"><div style="font-size:9px;color:var(--dim)">TOTAL COP</div><div style="font-family:var(--mono);font-weight:700;color:#7dd3fc">${fmtCOP(tVCop)}</div></div></div>`;
+}
+if(filtC.length>0){
+let rows="";
+filtC.forEach((c,i)=>{const cop=n(c.bs)*n(c.tasa);rows+=`<tr><td>${i+1}</td><td class="td-green">${fmt(n(c.bs),2)}</td><td>${fmt(n(c.tasa),4)}</td><td class="td-blue">${fmtCOP(cop)}</td><td style="font-size:10px;color:var(--dim)">${state.accounts.find(a=>a.cod===c.cod)?.nombre||c.cod||"—"}</td></tr>`;});
+cs=`<div class="fac-section-title t-green">📥 COMPRAS — Lo que le debo</div>
+<table><thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>COP</th><th>CUENTA</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="fac-total-row"><div><div style="font-size:9px;color:var(--dim)">TOTAL Bs</div><div class="td-green" style="font-family:var(--mono);font-weight:700">${fmt(tCBs,2)}</div></div>
+<div style="text-align:right"><div style="font-size:9px;color:var(--dim)">TOTAL COP</div><div style="font-family:var(--mono);font-weight:700;color:var(--green)">${fmtCOP(tCCop)}</div></div></div>`;
+}
+if(filtV.length>0&&filtC.length>0){
+const nBS=tVBs-tCBs,nCOP=tVCop-tCCop;
+neto=`<div class="fac-neto"><div class="fac-neto-side"><div class="fac-neto-label">${nBS>=0?"ME DEBE (Bs)":"LE DEBO (Bs)"}</div>
+<div class="fac-neto-val" style="color:${nBS>=0?"#7dd3fc":"var(--red)"}">${fmt(Math.abs(nBS),2)}</div></div>
+<div class="fac-neto-side" style="text-align:right"><div class="fac-neto-label">${nCOP>=0?"ME DEBE (COP)":"LE DEBO (COP)"}</div>
+<div class="fac-neto-val" style="color:${nCOP>=0?"var(--green)":"var(--red)"}">${fmtCOP(Math.abs(nCOP))}</div></div></div>`;
+}
+const copyText=buildFacturaText(clienteFiltro,filtV,filtC,tVBs,tVCop,tCBs,tCCop,day.label);
+return `<div class="factura-wrap">
+<div class="fac-header"><div class="fac-name">${clienteFiltro.toUpperCase()}</div><div class="fac-date">${day.label}</div></div>
+${vs}${cs}${neto}
+<button class="copy-btn" onclick="copyFactura(\`${copyText.replace(/\`/g,"'")}\`)">📋 Copiar resumen para WhatsApp</button>
+</div>`;
+}
+
+function renderClienteHTML(){
+const day=state.days[state.currentDay];
+const allNames=[...day.ventas,...day.compras].filter(r=>r.nombre&&n(r.bs)>0)
+.map(r=>r.nombre).filter((v,i,a)=>v&&a.indexOf(v)===i).sort();
+const filtV=clienteFiltro?day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(v.bs)>0):[];
+const filtC=clienteFiltro?day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(c.bs)>0):[];
+const tVBs=filtV.reduce((a,v)=>a+n(v.bs),0),tVCop=filtV.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+const tCBs=filtC.reduce((a,c)=>a+n(c.bs),0),tCCop=filtC.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
+const hasData=filtV.length>0||filtC.length>0;
+let body="";
+if(clienteFiltro&&!hasData){
+body=`<div class="empty-msg">Sin transacciones para "<strong>${clienteFiltro}</strong>"</div>`;
+} else if(hasData){
+let vs="",cs="",neto="";
+if(filtV.length>0){
+let rows="";
+filtV.forEach((v,i)=>{
+const cop=n(v.bs)*n(v.tasa);
+rows+=`<tr><td>${i+1}</td><td class="td-green">${fmt(n(v.bs),2)}</td>
+<td>${fmt(n(v.tasa),4)}</td><td class="td-blue">${fmtCOP(cop)}</td>
+<td style="font-size:10px;color:var(--dim)">${state.accounts.find(a=>a.cod===v.cod)?.nombre||v.cod||"—"}</td></tr>`;
+});
+vs=`<div class="fac-section-title t-blue">📤 VENTAS — Lo que me debe</div>
+<table><thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>COP</th><th>CUENTA</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="fac-total-row">
+<div><div style="font-size:9px;color:var(--dim)">TOTAL Bs</div><div class="td-green" style="font-family:var(--mono);font-weight:700">${fmt(tVBs,2)}</div></div>
+<div style="text-align:right"><div style="font-size:9px;color:var(--dim)">TOTAL COP</div><div style="font-family:var(--mono);font-weight:700;color:#7dd3fc">${fmtCOP(tVCop)}</div></div>
+</div>`;
+}
+if(filtC.length>0){
+let rows="";
+filtC.forEach((c,i)=>{
+const cop=n(c.bs)*n(c.tasa);
+rows+=`<tr><td>${i+1}</td><td class="td-green">${fmt(n(c.bs),2)}</td>
+<td>${fmt(n(c.tasa),4)}</td><td class="td-blue">${fmtCOP(cop)}</td>
+<td style="font-size:10px;color:var(--dim)">${state.accounts.find(a=>a.cod===c.cod)?.nombre||c.cod||"—"}</td></tr>`;
+});
+cs=`<div class="fac-section-title t-green">📥 COMPRAS — Lo que le debo</div>
+<table><thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>COP</th><th>CUENTA</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="fac-total-row">
+<div><div style="font-size:9px;color:var(--dim)">TOTAL Bs</div><div class="td-green" style="font-family:var(--mono);font-weight:700">${fmt(tCBs,2)}</div></div>
+<div style="text-align:right"><div style="font-size:9px;color:var(--dim)">TOTAL COP</div><div style="font-family:var(--mono);font-weight:700;color:var(--green)">${fmtCOP(tCCop)}</div></div>
+</div>`;
+}
+if(filtV.length>0&&filtC.length>0){
+const nBS=tVBs-tCBs,nCOP=tVCop-tCCop;
+neto=`<div class="fac-neto">
+<div class="fac-neto-side">
+<div class="fac-neto-label">${nBS>=0?"ME DEBE (Bs)":"LE DEBO (Bs)"}</div>
+<div class="fac-neto-val" style="color:${nBS>=0?"#7dd3fc":"var(--red)"}">${fmt(Math.abs(nBS),2)}</div>
 </div>
-<div class="kpi-card kpi-blue">
-<div class="kpi-label">Bs VENDIDOS (mes)</div>
-<div class="kpi-val">${fmt(totBV,2)}</div>
-<div class="kpi-sub">${fmtCOP(totCV)}</div>
-</div>
-<div class="kpi-card kpi-gold">
-<div class="kpi-label">Bs COMPRADOS (mes)</div>
-<div class="kpi-val">${fmt(totBC,2)}</div>
-<div class="kpi-sub">${fmtCOP(totCC)}</div>
-</div>
-<div class="kpi-card kpi-neut">
-<div class="kpi-label">PROM COMPRA PROM</div>
-<div class="kpi-val">${fmt(avgPC,4)}</div>
-<div class="kpi-label" style="margin-top:6px">PROM VENTA PROM</div>
-<div class="kpi-val">${fmt(avgPV,4)}</div>
-</div>
-<div class="kpi-card kpi-neut">
-<div class="kpi-label">QUEDA EN Bs (último día)</div>
-<div class="kpi-val">${fmt(last.quedaBs,2)}</div>
-<div class="kpi-label" style="margin-top:6px">VALOR EN PESOS</div>
-<div class="kpi-val">${fmtCOP(last.valorPesos)}</div>
+<div class="fac-neto-side" style="text-align:right">
+<div class="fac-neto-label">${nCOP>=0?"ME DEBE (COP)":"LE DEBO (COP)"}</div>
+<div class="fac-neto-val" style="color:${nCOP>=0?"var(--green)":"var(--red)"}">${fmtCOP(Math.abs(nCOP))}</div>
 </div>
 </div>`;
+}
+const copyText=buildFacturaText(clienteFiltro,filtV,filtC,tVBs,tVCop,tCBs,tCCop,day.label);
+body=`<div class="factura-wrap">
+<div class="fac-header"><div class="fac-name">${clienteFiltro.toUpperCase()}</div><div class="fac-date">${day.label}</div></div>
+${vs}${cs}${neto}
+<button class="copy-btn" onclick="copyFactura(\`${copyText.replace(/`/g,"'")}\`)">📋 Copiar resumen para WhatsApp</button>
+</div>`;
+} else {
+body=`<div class="empty-msg">Escribe el nombre para ver sus transacciones</div>`;
+}
+return `<div class="card" id="cliente-block">
+<div class="card-header"><span class="card-title t-purple">👤 RESUMEN POR CLIENTE / PROVEEDOR</span></div>
+<div class="search-wrap">
+<input class="search-inp" type="text" placeholder="🔍 Buscar..." value="${clienteFiltro}"
+list="clientes-list"
+oninput="setClienteFiltro(this.value)"
+autocomplete="off"
+autocorrect="off"
+autocapitalize="off"
+spellcheck="false"/>
+<datalist id="clientes-list">${allNames.map(nm=>`<option value="${nm}">`).join("")}</datalist>
+${clienteFiltro?`<button class="del-btn" style="font-size:18px" onclick="clienteFiltro='';document.querySelector('.search-inp').value='';renderClienteResults()">×</button>`:""}
+</div>
+<div id="cliente-results">${body}</div>
+</div>`;
+}
 
+function buildFacturaText(nombre,ventas,compras,tVBs,tVCop,tCBs,tCCop,fecha){
+let txt="━━━━━━━━━━━━━━━━━━━━━━━\n";
+txt+=` ${nombre.toUpperCase()}\n ${fecha}\n`;
+txt+="━━━━━━━━━━━━━━━━━━━━━━━\n";
+if(ventas.length>0){
+txt+="\n 📤 VENTAS\n\n";
+ventas.forEach((v,i)=>{const cop=n(v.bs)*n(v.tasa);txt+=` ${i+1}. ${fmt(n(v.bs),2)} Bs\n Tasa: ${fmt(n(v.tasa),4)}\n Total: ${fmtCOP(cop)}\n\n`;});
+txt+=` Total Bs: ${fmt(tVBs,2)} | COP: ${fmtCOP(tVCop)}\n`;
+}
+if(compras.length>0){
+txt+="\n 📥 COMPRAS\n\n";
+compras.forEach((c,i)=>{const cop=n(c.bs)*n(c.tasa);txt+=` ${i+1}. ${fmt(n(c.bs),2)} Bs\n Tasa: ${fmt(n(c.tasa),4)}\n Total: ${fmtCOP(cop)}\n\n`;});
+txt+=` Total Bs: ${fmt(tCBs,2)} | COP: ${fmtCOP(tCCop)}\n`;
+}
+if(ventas.length>0&&compras.length>0){
+const nBS=tVBs-tCBs,nCOP=tVCop-tCCop;
+txt+="\n ⚖️ SALDO NETO\n";
+txt+=` ${nBS>=0?"Me debe":"Le debo"}: ${fmt(Math.abs(nBS),2)} Bs / ${fmtCOP(Math.abs(nCOP))}\n`;
+}
+txt+="━━━━━━━━━━━━━━━━━━━━━━━";
+return txt;
+}
+function copyFactura(text){
+navigator.clipboard.writeText(text).then(()=>showToast("Copiado ✓","ok")).catch(()=>showToast("No se pudo copiar","err"));
+}
+
+// MES
+function renderMesHTML(){
+const rows=state.days.map((day,i)=>({...calcResumen(day),label:day.label||`Día ${String(i+1).padStart(2,"0")}`}));
+const totBC=rows.reduce((a,r)=>a+r.bsCompReal,0);
+const totCC=rows.reduce((a,r)=>a+r.copComp,0);
+const totBV=rows.reduce((a,r)=>a+r.bsVendReal,0);
+const totCV=rows.reduce((a,r)=>a+r.copVend,0);
+const totU=rows.reduce((a,r)=>a+r.utilidad,0);
+const pCA=rows.filter(r=>r.promCompra>0);
+const pVA=rows.filter(r=>r.promVenta>0);
+const avgPC=pCA.length?pCA.reduce((a,r)=>a+r.promCompra,0)/pCA.length:0;
+const avgPV=pVA.length?pVA.reduce((a,r)=>a+r.promVenta,0)/pVA.length:0;
+const last=rows[rows.length-1]||{};
 let trows="";
 rows.forEach((r,i)=>{
-trows+=`<tr class="${i%2===0?"alt":""}">
-<td><span class="day-chip">${r.label}</span></td>
+trows+=`<tr>
+<td><span class="cod-tag" style="font-size:10px">${r.label}</span></td>
 <td class="td-dim">${fmt(r.inicioBs,2)}</td>
-<td class="td-green">${fmt(r.bsComp,2)}</td>
-<td class="td-green">${fmt(r.copComp,0)}</td>
-<td class="td-blue">${fmt(r.bsVend,2)}</td>
-<td class="td-blue">${fmt(r.copVend,0)}</td>
-<td class="td-dim">${fmt(r.promCompra,4)}</td>
-<td class="td-dim">${fmt(r.promVenta,4)}</td>
+<td class="td-green">${fmt(r.bsCompReal,2)}</td><td class="td-green">${fmt(r.copComp,0)}</td>
+<td class="td-blue">${fmt(r.bsVendReal,2)}</td><td class="td-blue">${fmt(r.copVend,0)}</td>
+<td class="td-dim">${fmt(r.promCompra,4)}</td><td class="td-dim">${fmt(r.promVenta,4)}</td>
 <td class="${r.utilidad>=0?"td-green":"td-red"}" style="font-weight:700">${fmtCOP(r.utilidad)}</td>
-<td class="td-gold">${fmt(r.quedaBs,2)}</td>
+<td class="td-cyan">${fmt(r.quedaBs,2)}</td>
 </tr>`;
 });
-
-return `${kpis}
+return `<div class="kpi-row">
+<div class="kpi k-green"><div class="kpi-label">UTILIDAD TOTAL</div><div class="kpi-val">${fmtCOP(totU)}</div></div>
+<div class="kpi k-blue"><div class="kpi-label">Bs VENDIDOS</div><div class="kpi-val">${fmt(totBV,2)}</div><div class="kpi-sub">${fmtCOP(totCV)}</div></div>
+<div class="kpi k-cyan"><div class="kpi-label">Bs COMPRADOS</div><div class="kpi-val">${fmt(totBC,2)}</div><div class="kpi-sub">${fmtCOP(totCC)}</div></div>
+<div class="kpi"><div class="kpi-label">PROM COMPRA</div><div class="kpi-val" style="color:var(--green)">${fmt(avgPC,4)}</div>
+<div class="kpi-label" style="margin-top:8px">PROM VENTA</div><div class="kpi-val" style="color:#7dd3fc">${fmt(avgPV,4)}</div></div>
+<div class="kpi"><div class="kpi-label">QUEDA EN Bs</div><div class="kpi-val" style="color:var(--cyan)">${fmt(last.quedaBs,2)}</div>
+<div class="kpi-label" style="margin-top:8px">VALOR PESOS</div><div class="kpi-val" style="color:var(--cyan)">${fmtCOP(last.valorPesos)}</div></div>
+</div>
 <div class="card">
-<div class="card-header hdr-mes" style="justify-content:space-between">
-<span>📋 DETALLE POR DÍA</span>
-<button class="btn btn-blue" style="font-size:11px" onclick="exportExcel()">⬇ Descargar Excel completo</button>
+<div class="card-header" style="justify-content:space-between">
+<span class="card-title">📋 DETALLE POR DÍA</span>
+<button class="action-btn ab-blue" style="width:auto;padding:5px 12px" onclick="exportExcel()">⬇ Excel</button>
 </div>
 <div class="tbl-wrap"><table>
-<thead><tr>
-<th>DÍA</th><th>INICIO Bs</th><th>Bs COMP</th><th>COP COMP</th>
-<th>Bs VEND</th><th>COP VEND</th><th>PROM COMPRA</th><th>PROM VENTA</th>
-<th>UTILIDAD</th><th>QUEDA Bs</th>
-</tr></thead>
+<thead><tr><th>DÍA</th><th>INICIO Bs</th><th>Bs COMP</th><th>COP COMP</th>
+<th>Bs VEND</th><th>COP VEND</th><th>PROM C</th><th>PROM V</th><th>UTILIDAD</th><th>QUEDA Bs</th></tr></thead>
 <tbody>${trows}</tbody>
-<tfoot><tr>
-<td>TOTAL</td><td>—</td>
+<tfoot><tr><td>TOTAL</td><td>—</td>
 <td class="td-green">${fmt(totBC,2)}</td><td class="td-green">${fmt(totCC,0)}</td>
 <td class="td-blue">${fmt(totBV,2)}</td><td class="td-blue">${fmt(totCV,0)}</td>
 <td>${fmt(avgPC,4)}</td><td>${fmt(avgPV,4)}</td>
-<td style="font-weight:700;color:${totU>=0?"#7ee787":"var(--red)"}">${fmtCOP(totU)}</td>
-<td class="td-gold">${fmt(last.quedaBs,2)}</td>
+<td style="font-weight:700;color:${totU>=0?"var(--green)":"var(--red)"}">${fmtCOP(totU)}</td>
+<td class="td-cyan">${fmt(last.quedaBs,2)}</td>
 </tr></tfoot>
 </table></div>
 </div>`;
 }
 
-// ══════════════════════════════════════════════
-// ACCOUNT MANAGER
-// ══════════════════════════════════════════════
-function openAccMgr(){
-const list = document.getElementById("acc-list");
-list.innerHTML = state.accounts.map(a=>`
-<div class="acc-item">
-<span><strong style="color:var(--gold)">${a.cod}</strong> — ${a.nombre}</span>
-<button class="del-btn" onclick="removeAccount('${a.cod}')">×</button>
-</div>`).join("");
-document.getElementById("modal-acc").style.display="flex";
-}
-function closeAccMgr(){ document.getElementById("modal-acc").style.display="none"; }
-
-function addAccount(){
-const cod = document.getElementById("new-cod").value.trim().toUpperCase();
-const nom = document.getElementById("new-nom").value.trim().toUpperCase();
-if(!cod||!nom){ showToast("Completa COD y Nombre","err"); return; }
-if(state.accounts.find(a=>a.cod===cod)){ showToast("Ese COD ya existe","err"); return; }
-state.accounts.push({cod,nombre:nom});
-state.days.forEach(day=>{
-day.saldos.push({cod,inicioBs:0,promedio:day.saldos[0]?.promedio||0});
-});
-saveLocal(); syncSave();
-openAccMgr(); render();
-showToast(`Cuenta ${cod} agregada`,"ok");
-}
-
-function removeAccount(cod){
-if(!confirm(`¿Eliminar cuenta ${cod}?`)) return;
-state.accounts = state.accounts.filter(a=>a.cod!==cod);
-state.days.forEach(day=>{ day.saldos=day.saldos.filter(s=>s.cod!==cod); });
-saveLocal(); syncSave();
-openAccMgr(); render();
-}
-
-// ══════════════════════════════════════════════
 // EXCEL EXPORT
-// ══════════════════════════════════════════════
 function exportExcel(){
-const wb = XLSX.utils.book_new();
+const wb=XLSX.utils.book_new();
 state.days.forEach((day,di)=>{
-const r = calcResumen(day);
-const lbl = day.label||`Día ${String(di+1).padStart(2,"0")}`;
+const r=calcResumen(day);
+const lbl=day.label||`Día ${String(di+1).padStart(2,"0")}`;
 const rows=[[`CONTROL DIARIO Bs — ${lbl}`],[]];
 rows.push(["SALDOS","","","","","",""]);
 rows.push(["COD","CUENTA","INICIO Bs","PROMEDIO","PESOS","COMPRA","VENTA","STOCK"]);
 day.saldos.forEach(s=>{
 const acc=state.accounts.find(a=>a.cod===s.cod);
-const comp=day.compras.filter(c=>c.cod===s.cod).reduce((a,c)=>a+n(c.bs),0);
-const vent=day.ventas.filter(v=>v.cod===s.cod).reduce((a,v)=>a+n(v.bs),0);
+const comp=day.compras.filter(c=>c.cod===s.cod&&c.cod!=="DR").reduce((a,c)=>a+n(c.bs),0);
+const vent=day.ventas.filter(v=>v.cod===s.cod&&v.cod!=="DR").reduce((a,v)=>a+n(v.bs),0);
 rows.push([s.cod,acc?.nombre||"",n(s.inicioBs),n(s.promedio),n(s.inicioBs)*n(s.promedio),comp,vent,n(s.inicioBs)+comp-vent]);
 });
 rows.push([]);
@@ -1079,49 +1342,77 @@ rows.push(["TOTAL","","","",vF.reduce((a,v)=>a+n(v.bs),0),vF.reduce((a,v)=>a+n(v
 rows.push([]);
 rows.push(["RESUMEN DEL DÍA"]);
 [["INICIO EN Bs",r.inicioBs],["INICIO EN PESOS",r.inicioPesos],
-["Bs COMPRADOS",r.bsComp],["Bs COMPRADOS EN PESOS",r.copComp],
-["Bs VENDIDOS",r.bsVend],["Bs VENDIDOS EN PESOS",r.copVend],
+["Bs COMPRADOS",r.bsCompReal],["Bs COMPRADOS EN PESOS",r.copComp],
+["Bs VENDIDOS",r.bsVendReal],["Bs VENDIDOS EN PESOS",r.copVend],
 ["PROMEDIO COMPRA REAL",r.promCompra],["PROMEDIO VENTA",r.promVenta],
-["UTILIDAD (COP)",r.utilidad],["QUEDA EN Bs",r.quedaBs],
-["VALOR EN PESOS (costo)",r.valorPesos]
+["UTILIDAD DIRECTA",r.utilidadDirecta],["UTILIDAD TOTAL",r.utilidad],
+["QUEDA EN Bs",r.quedaBs],["VALOR EN PESOS",r.valorPesos]
 ].forEach(([l,v])=>rows.push([l,v]));
 const ws=XLSX.utils.aoa_to_sheet(rows);
-ws['!cols']=Array(14).fill({wch:16});
+ws["!cols"]=Array(14).fill({wch:16});
 XLSX.utils.book_append_sheet(wb,ws,lbl.slice(0,31));
+});
+// Por cliente
+const clientMap={};
+state.days.forEach((day,di)=>{
+const lbl=day.label||`Día ${di+1}`;
+day.ventas.filter(v=>v.nombre&&n(v.bs)>0).forEach(v=>{
+if(!clientMap[v.nombre]) clientMap[v.nombre]={ventas:[],compras:[]};
+const acc=state.accounts.find(a=>a.cod===v.cod);
+clientMap[v.nombre].ventas.push([lbl,n(v.bs),n(v.tasa),n(v.bs)*n(v.tasa),acc?.nombre||v.cod]);
+});
+day.compras.filter(c=>c.nombre&&n(c.bs)>0).forEach(c=>{
+if(!clientMap[c.nombre]) clientMap[c.nombre]={ventas:[],compras:[]};
+const acc=state.accounts.find(a=>a.cod===c.cod);
+clientMap[c.nombre].compras.push([lbl,n(c.bs),n(c.tasa),n(c.bs)*n(c.tasa),acc?.nombre||c.cod]);
+});
+});
+Object.entries(clientMap).forEach(([nombre,data])=>{
+const cRows=[[`RESUMEN: ${nombre.toUpperCase()}`],[]];
+if(data.ventas.length>0){
+cRows.push(["VENTAS — Lo que me debe"]);
+cRows.push(["DIA","Bs","TASA","TOTAL COP","CUENTA"]);
+data.ventas.forEach(r=>cRows.push(r));
+cRows.push(["TOTAL",data.ventas.reduce((a,r)=>a+r[1],0),"",data.ventas.reduce((a,r)=>a+r[3],0),""]);
+cRows.push([]);
+}
+if(data.compras.length>0){
+cRows.push(["COMPRAS — Lo que le debo"]);
+cRows.push(["DIA","Bs","TASA","TOTAL COP","CUENTA"]);
+data.compras.forEach(r=>cRows.push(r));
+cRows.push(["TOTAL",data.compras.reduce((a,r)=>a+r[1],0),"",data.compras.reduce((a,r)=>a+r[3],0),""]);
+cRows.push([]);
+}
+if(data.ventas.length>0&&data.compras.length>0){
+const tVB=data.ventas.reduce((a,r)=>a+r[1],0),tVC=data.ventas.reduce((a,r)=>a+r[3],0);
+const tCB=data.compras.reduce((a,r)=>a+r[1],0),tCC=data.compras.reduce((a,r)=>a+r[3],0);
+cRows.push(["SALDO NETO"]);
+cRows.push([tVB-tCB>=0?"Me debe (Bs)":"Le debo (Bs)",Math.abs(tVB-tCB)]);
+cRows.push([tVC-tCC>=0?"Me debe (COP)":"Le debo (COP)",Math.abs(tVC-tCC)]);
+}
+const wsC=XLSX.utils.aoa_to_sheet(cRows);
+wsC["!cols"]=Array(5).fill({wch:18});
+XLSX.utils.book_append_sheet(wb,wsC,nombre.slice(0,31));
 });
 // Resumen General
 const sRows=[["RESUMEN GENERAL DEL MES"],[]];
-sRows.push(["DÍA","INICIO Bs","Bs COMP","COP COMP","Bs VEND","COP VEND","PROM COMPRA","PROM VENTA","UTILIDAD","QUEDA Bs","VALOR PESOS"]);
+sRows.push(["DIA","INICIO Bs","Bs COMP","COP COMP","Bs VEND","COP VEND","PROM COMPRA","PROM VENTA","UTILIDAD","QUEDA Bs","VALOR PESOS"]);
 let tBC=0,tCC=0,tBV=0,tCV=0,tU=0;
 state.days.forEach((day,di)=>{
 const r=calcResumen(day);
-tBC+=r.bsComp;tCC+=r.copComp;tBV+=r.bsVend;tCV+=r.copVend;tU+=r.utilidad;
-sRows.push([day.label||`Día ${di+1}`,r.inicioBs,r.bsComp,r.copComp,r.bsVend,r.copVend,r.promCompra,r.promVenta,r.utilidad,r.quedaBs,r.valorPesos]);
+tBC+=r.bsCompReal;tCC+=r.copComp;tBV+=r.bsVendReal;tCV+=r.copVend;tU+=r.utilidad;
+sRows.push([day.label||`Día ${di+1}`,r.inicioBs,r.bsCompReal,r.copComp,r.bsVendReal,r.copVend,r.promCompra,r.promVenta,r.utilidad,r.quedaBs,r.valorPesos]);
 });
 sRows.push([]);
 sRows.push(["TOTALES","",tBC,tCC,tBV,tCV,"","",tU,"",""]);
 const wsS=XLSX.utils.aoa_to_sheet(sRows);
-wsS['!cols']=Array(11).fill({wch:16});
+wsS["!cols"]=Array(11).fill({wch:16});
 XLSX.utils.book_append_sheet(wb,wsS,"Resumen General");
 XLSX.writeFile(wb,`Control_Bs_${new Date().toISOString().slice(0,10)}.xlsx`);
 showToast("Excel descargado ✓","ok");
 }
 
-// ══════════════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════════════
-let toastTimer=null;
-function showToast(msg,type="ok"){
-const el=document.getElementById("toast");
-el.textContent=msg;
-el.className=`toast ${type}`;
-clearTimeout(toastTimer);
-toastTimer=setTimeout(()=>el.classList.add("hide"),3000);
-}
-
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
+// ══ INIT ═══════════════════════════════════════════════════
 async function init(){
 loadLocal();
 if(state.days.length===0) state.days=[emptyDay()];
@@ -1133,443 +1424,8 @@ await syncLoad();
 setSyncStatus("","Sin configurar");
 }
 }
-
-// ══════════════════════════════════════════════════════════════
-// OPERACIÓN DIRECTA
-// ══════════════════════════════════════════════════════════════
-let directoData = {
-cliente:"", proveedor:"", codProv:"DR", bs:"", tasaVenta:"", tasaCompra:""
-};
-
-function updateDirecto(field, val){
-directoData[field] = val;
-renderDirectoPreview();
-}
-
-function renderDirectoPreview(){
-const bs = rawNum(directoData.bs);
-const tv = rawNum(directoData.tasaVenta);
-const tc = rawNum(directoData.tasaCompra);
-const copVenta = bs * tv;
-const copCompra = bs * tc;
-const ganancia = copVenta - copCompra;
-const el = document.getElementById("directo-preview");
-if(!el) return;
-el.innerHTML = `
-<div class="directo-preview-row">
-<span class="directo-preview-label">COP que recibes del cliente</span>
-<span class="directo-preview-val td-blue">${fmtCOP(copVenta)}</span>
-</div>
-<div class="directo-preview-row">
-<span class="directo-preview-label">COP que le pagas al proveedor</span>
-<span class="directo-preview-val td-green">${fmtCOP(copCompra)}</span>
-</div>
-<div class="directo-preview-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px">
-<span class="directo-preview-label">GANANCIA DIRECTA</span>
-<span class="directo-preview-val directo-ganancia">${fmtCOP(ganancia)}</span>
-</div>`;
-}
-
-function guardarDirecto(){
-const bs = rawNum(directoData.bs);
-const tv = rawNum(directoData.tasaVenta);
-const tc = rawNum(directoData.tasaCompra);
-if(!bs||!tv||!tc){ showToast("Completa Bs, tasa venta y tasa compra","err"); return; }
-if(!directoData.cliente){ showToast("Ingresa el nombre del cliente","err"); return; }
-if(!directoData.proveedor){ showToast("Ingresa el nombre del proveedor","err"); return; }
-
-const day = state.days[state.currentDay];
-
-// Register venta
-day.ventas.push({
-nombre: directoData.cliente,
-cod: directoData.codProv || "DR",
-tasa: tv,
-bs: bs,
-done: false,
-});
-
-// Register compra
-day.compras.push({
-nombre: directoData.proveedor,
-cod: directoData.codProv || "DR",
-tasa: tc,
-bs: bs,
-done: false,
-});
-
-// Reset form
-directoData = {cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
-saveLocal(); syncSave();
-reRenderMov("ventas");
-reRenderMov("compras");
-renderResumen();
-updateSaldoCalcs();
-renderDirectoCard();
-showToast("Operación directa registrada ✓","ok");
-}
-
-function renderDirectoCard(){
-const el = document.getElementById("directo-card");
-if(el) el.outerHTML = renderDirectoHTML();
-}
-
-function renderDirectoHTML(){
-const bs = rawNum(directoData.bs);
-const tv = rawNum(directoData.tasaVenta);
-const tc = rawNum(directoData.tasaCompra);
-const ganancia = bs&&tv&&tc ? fmtCOP(bs*tv - bs*tc) : "—";
-
-return `<div class="card" id="directo-card">
-<div class="card-header hdr-directo">⚡ OPERACIÓN DIRECTA (DR)</div>
-<div class="directo-form">
-<div class="directo-row">
-<div class="directo-field">
-<div class="directo-label">CLIENTE</div>
-<input class="directo-input" placeholder="Nombre cliente"
-value="${directoData.cliente}"
-oninput="updateDirecto('cliente',this.value)"/>
-</div>
-<div class="directo-field">
-<div class="directo-label">PROVEEDOR</div>
-<input class="directo-input" placeholder="Nombre proveedor"
-value="${directoData.proveedor}"
-oninput="updateDirecto('proveedor',this.value)"/>
-</div>
-</div>
-<div class="directo-row">
-<div class="directo-field">
-<div class="directo-label">COD CUENTA</div>
-<input class="directo-input" placeholder="DR" style="text-align:center"
-value="${directoData.codProv}"
-list="cods-list"
-oninput="updateDirecto('codProv',this.value.toUpperCase())"/>
-</div>
-<div class="directo-field">
-<div class="directo-label">Bs</div>
-<input class="directo-input" placeholder="0" inputmode="decimal"
-value="${directoData.bs}"
-oninput="updateDirecto('bs',this.value)"
-onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/>
-</div>
-</div>
-<div class="directo-row">
-<div class="directo-field">
-<div class="directo-label">TASA VENTA (lo que cobra)</div>
-<input class="directo-input" placeholder="0,0000" inputmode="decimal"
-value="${directoData.tasaVenta}"
-oninput="updateDirecto('tasaVenta',this.value)"
-onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/>
-</div>
-<div class="directo-field">
-<div class="directo-label">TASA COMPRA (lo que paga)</div>
-<input class="directo-input" placeholder="0,0000" inputmode="decimal"
-value="${directoData.tasaCompra}"
-oninput="updateDirecto('tasaCompra',this.value)"
-onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):''"/>
-</div>
-</div>
-<div class="directo-preview" id="directo-preview">
-<div class="directo-preview-row">
-<span class="directo-preview-label">Completa los campos para ver la ganancia</span>
-</div>
-</div>
-<button class="btn-directo" onclick="guardarDirecto()">
-⚡ Registrar operación directa
-</button>
-</div>
-</div>`;
-}
-
-// ══════════════════════════════════════════════════════════════
-// RESUMEN POR CLIENTE
-// ══════════════════════════════════════════════════════════════
-let clienteFiltro = "";
-
-function setClienteFiltro(val) {
-clienteFiltro = val;
-renderClienteCard();
-}
-
-function renderClienteCard() {
-const el = document.getElementById("cliente-card");
-if(el) el.outerHTML = renderClienteHTML();
-}
-
-function renderClienteHTML() {
-const day = state.days[state.currentDay];
-
-// All names from ventas and compras
-const allNames = [
-...day.ventas.filter(v=>v.nombre&&n(v.bs)>0).map(v=>v.nombre),
-...day.compras.filter(c=>c.nombre&&n(c.bs)>0).map(c=>c.nombre),
-].filter((v,i,a)=>v&&a.indexOf(v)===i).sort();
-
-const filtVentas = clienteFiltro
-? day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(v.bs)>0)
-: [];
-const filtCompras = clienteFiltro
-? day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase().includes(clienteFiltro.toLowerCase())&&n(c.bs)>0)
-: [];
-
-const totVBs = filtVentas.reduce((a,v)=>a+n(v.bs),0);
-const totVCop = filtVentas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
-const totCBs = filtCompras.reduce((a,c)=>a+n(c.bs),0);
-const totCCop = filtCompras.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
-const hasData = filtVentas.length>0 || filtCompras.length>0;
-
-let facturaHTML = "";
-if(clienteFiltro && !hasData) {
-facturaHTML = `<div class="factura-empty">Sin transacciones para "<strong>${clienteFiltro}</strong>"</div>`;
-} else if(hasData) {
-
-// VENTAS section
-let ventasSection = "";
-if(filtVentas.length>0){
-let rows="";
-filtVentas.forEach((v,i)=>{
-const cop=n(v.bs)*n(v.tasa);
-rows+=`<tr class="${i%2===0?"alt":""}">
-<td>${i+1}</td>
-<td class="td-green">${fmt(n(v.bs),2)}</td>
-<td>${fmt(n(v.tasa),4)}</td>
-<td class="td-blue">${fmtCOP(cop)}</td>
-<td style="font-size:10px">${state.accounts.find(a=>a.cod===v.cod)?.nombre||v.cod||"—"}</td>
-</tr>`;
-});
-ventasSection = `
-<div style="font-size:10px;font-weight:700;color:#7dd3fc;padding:8px 12px 4px;letter-spacing:.5px">
-📤 VENTAS — Lo que me debe
-</div>
-<table class="factura-table">
-<thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>TOTAL COP</th><th>CUENTA</th></tr></thead>
-<tbody>${rows}</tbody>
-</table>
-<div class="factura-total" style="margin:4px 12px 8px;border-color:#0077cc">
-<div>
-<div class="factura-total-label">TOTAL Bs VENDIDOS</div>
-<div style="color:#7ee787;font-family:var(--mono);font-weight:700">${fmt(totVBs,2)}</div>
-</div>
-<div style="text-align:right">
-<div class="factura-total-label">TOTAL COP</div>
-<div style="color:#7dd3fc;font-family:var(--mono);font-weight:700;font-size:14px">${fmtCOP(totVCop)}</div>
-</div>
-</div>`;
-}
-
-// COMPRAS section
-let comprasSection = "";
-if(filtCompras.length>0){
-let rows="";
-filtCompras.forEach((c,i)=>{
-const cop=n(c.bs)*n(c.tasa);
-rows+=`<tr class="${i%2===0?"alt":""}">
-<td>${i+1}</td>
-<td class="td-green">${fmt(n(c.bs),2)}</td>
-<td>${fmt(n(c.tasa),4)}</td>
-<td class="td-blue">${fmtCOP(cop)}</td>
-<td style="font-size:10px">${state.accounts.find(a=>a.cod===c.cod)?.nombre||c.cod||"—"}</td>
-</tr>`;
-});
-comprasSection = `
-<div style="font-size:10px;font-weight:700;color:#5eead4;padding:8px 12px 4px;letter-spacing:.5px">
-📥 COMPRAS — Lo que le debo
-</div>
-<table class="factura-table">
-<thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>TOTAL COP</th><th>CUENTA</th></tr></thead>
-<tbody>${rows}</tbody>
-</table>
-<div class="factura-total" style="margin:4px 12px 8px;border-color:#00c9a7">
-<div>
-<div class="factura-total-label">TOTAL Bs COMPRADOS</div>
-<div style="color:#7ee787;font-family:var(--mono);font-weight:700">${fmt(totCBs,2)}</div>
-</div>
-<div style="text-align:right">
-<div class="factura-total-label">TOTAL COP</div>
-<div style="color:#5eead4;font-family:var(--mono);font-weight:700;font-size:14px">${fmtCOP(totCCop)}</div>
-</div>
-</div>`;
-}
-
-// Net summary (only when both ventas and compras exist)
-let netoSection = "";
-if(filtVentas.length>0 && filtCompras.length>0){
-const netoBS = totVBs - totCBs;
-const netoCOP = totVCop - totCCop;
-const colorBS = netoBS>=0?"#7dd3fc":"#f87171";
-const colorCOP = netoCOP>=0?"#7ee787":"#f87171";
-const labelBS = netoBS>=0?"Me debe (Bs)":"Le debo (Bs)";
-const labelCOP = netoCOP>=0?"Me debe (COP)":"Le debo (COP)";
-netoSection = `
-<div style="font-size:10px;font-weight:700;color:#fbbf24;padding:8px 12px 4px;letter-spacing:.5px">
-⚖️ SALDO NETO
-</div>
-<div style="margin:0 12px 10px;background:var(--bg3);border-radius:8px;
-padding:10px 14px;border:1px solid #d97706;display:flex;justify-content:space-between;align-items:center">
-<div>
-<div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:.5px">${labelBS}</div>
-<div style="font-family:var(--mono);font-weight:700;font-size:15px;color:${colorBS}">${fmt(Math.abs(netoBS),2)} Bs</div>
-</div>
-<div style="text-align:right">
-<div style="font-size:9px;color:var(--dim);font-weight:700;letter-spacing:.5px">${labelCOP}</div>
-<div style="font-family:var(--mono);font-weight:700;font-size:15px;color:${colorCOP}">${fmtCOP(Math.abs(netoCOP))}</div>
-</div>
-</div>`;
-}
-
-const copyText = buildFacturaText(clienteFiltro, filtVentas, filtCompras, totVBs, totVCop, totCBs, totCCop, day.label);
-
-facturaHTML = `<div class="factura">
-<div class="factura-header">
-<div class="factura-title">👤 ${clienteFiltro.toUpperCase()}</div>
-<div class="factura-sub">${day.label}</div>
-</div>
-${ventasSection}
-${comprasSection}
-${netoSection}
-<div style="padding:0 12px 10px">
-<button class="factura-copy-btn" onclick="copyFactura(\`${copyText.replace(/`/g,"'")}\`)">
-📋 Copiar resumen para enviar
-</button>
-</div>
-</div>`;
-} else {
-facturaHTML = `<div class="factura-empty">Escribe el nombre para ver sus transacciones</div>`;
-}
-
-return `<div class="card" id="cliente-card">
-<div class="card-header hdr-cliente">👤 RESUMEN POR CLIENTE / PROVEEDOR</div>
-<div class="cliente-search">
-<input type="text" placeholder="🔍 Buscar cliente o proveedor..."
-value="${clienteFiltro}"
-list="clientes-list"
-oninput="setClienteFiltro(this.value)"
-autocomplete="off"/>
-<datalist id="clientes-list">
-${allNames.map(nm=>`<option value="${nm}">`).join("")}
-</datalist>
-${clienteFiltro?`<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px" onclick="setClienteFiltro('');document.querySelector('.cliente-search input').value=''">✕</button>`:""}
-</div>
-${facturaHTML}
-</div>`;
-}
-
-function buildFacturaText(nombre, ventas, compras, totVBs, totVCop, totCBs, totCCop, fecha) {
-let txt = "━━━━━━━━━━━━━━━━━━━━━━━\n";
-txt += ` ${nombre.toUpperCase()}\n`;
-txt += ` ${fecha}\n`;
-txt += "━━━━━━━━━━━━━━━━━━━━━━━\n";
-
-if(ventas.length>0){
-txt += "\n 📤 VENTAS\n\n";
-ventas.forEach((v,i)=>{
-const cop = n(v.bs)*n(v.tasa);
-txt += ` ${i+1}. ${fmt(n(v.bs),2)} Bs\n`;
-txt += ` Tasa: ${fmt(n(v.tasa),4)} COP/Bs\n`;
-txt += ` Total: ${fmtCOP(cop)}\n\n`;
-});
-txt += ` Total Bs vendidos: ${fmt(totVBs,2)}\n`;
-txt += ` Total COP: ${fmtCOP(totVCop)}\n`;
-}
-
-if(compras.length>0){
-txt += "\n 📥 COMPRAS\n\n";
-compras.forEach((c,i)=>{
-const cop = n(c.bs)*n(c.tasa);
-txt += ` ${i+1}. ${fmt(n(c.bs),2)} Bs\n`;
-txt += ` Tasa: ${fmt(n(c.tasa),4)} COP/Bs\n`;
-txt += ` Total: ${fmtCOP(cop)}\n\n`;
-});
-txt += ` Total Bs comprados: ${fmt(totCBs,2)}\n`;
-txt += ` Total COP: ${fmtCOP(totCCop)}\n`;
-}
-
-if(ventas.length>0 && compras.length>0){
-const netoBS = totVBs - totCBs;
-const netoCOP = totVCop - totCCop;
-txt += "\n━━━━━━━━━━━━━━━━━━━━━━━\n";
-txt += " ⚖️ SALDO NETO\n\n";
-txt += ` ${netoBS>=0?"Me debe":"Le debo"} (Bs): ${fmt(Math.abs(netoBS),2)}\n`;
-txt += ` ${netoCOP>=0?"Me debe":"Le debo"} (COP): ${fmtCOP(Math.abs(netoCOP))}\n`;
-}
-txt += "━━━━━━━━━━━━━━━━━━━━━━━";
-return txt;
-}
-
-function copyFactura(text) {
-navigator.clipboard.writeText(text).then(()=>{
-showToast("Resumen copiado — listo para pegar en WhatsApp ✓","ok");
-}).catch(()=>{
-showToast("No se pudo copiar","err");
-});
-}
-
-// ── Formatted number input helpers ──
-function rawNum(str) {
-if(!str && str!==0) return "";
-let s = String(str).trim();
-// Detect format: if both . and , present, figure out which is decimal
-if(s.includes('.') && s.includes(',')) {
-// whichever comes last is decimal
-if(s.lastIndexOf('.') > s.lastIndexOf(',')) {
-s = s.replace(/,/g,''); // remove thousand sep commas
-} else {
-s = s.replace(/\./g,'').replace(',','.'); // remove thousand sep dots, comma->dot
-}
-} else if(s.includes(',')) {
-// only comma: could be decimal (5,68) or thousand (1,000)
-const parts = s.split(',');
-if(parts.length===2 && parts[1].length<=4 && parts[1].length>=1) {
-s = s.replace(',','.'); // treat as decimal
-} else {
-s = s.replace(/,/g,''); // treat as thousand separator
-}
-} else if(s.includes('.')) {
-// only dot: could be decimal (5.68) or thousand (1.000)
-const parts = s.split('.');
-if(parts.length===2 && parts[1].length<=4 && parts[1].length>=1) {
-// keep as is, it's decimal
-} else {
-s = s.replace(/\./g,''); // treat as thousand separator
-}
-}
-return parseFloat(s)||0;
-}
-
-function fmtInput(val) {
-if(val===undefined||val===null||val==="") return "";
-const num = rawNum(val);
-if(num===0) return "";
-return num.toLocaleString("es-CO", {minimumFractionDigits:0, maximumFractionDigits:4});
-}
-
-function makeFmtInput(id, value, onChangeFn, placeholder="0") {
-return `<input class="ni-fmt" id="${id}"
-value="${fmtInput(value)}"
-placeholder="${placeholder}"
-inputmode="decimal"
-onfocus="this.value=this.value.replace(/\\./g,'').replace(/,/g,'.')==='0'?'':this.value.replace(/[^0-9,]/g,'')"
-oninput="
-let raw=this.value.replace(/[^0-9,]/g,'');
-this.value=raw;
-let num=parseFloat(raw.replace(',','.'))||0;
-${onChangeFn}(num);
-"
-onblur="
-let num=parseFloat(this.value.replace(/\\./g,'').replace(',','.'))||0;
-this.value=num?num.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:4}):'';
-"
-/>`;
-}
-
 init();
-// Auto-sync every 30s pero solo si no hay cambios pendientes
-setInterval(()=>{
-if(state.scriptUrl && !syncTimer){
-syncLoad();
-}
-}, 30000);
-</script>
 
+</script>
 </body>
 </html>
