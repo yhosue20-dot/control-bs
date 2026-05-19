@@ -170,7 +170,7 @@ justify-content:space-between;border-bottom:1px solid var(--border);
 
 /* ══ TABLES ════════════════════════════════════════════════ */
 .tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto}
 thead th{
 background:var(--bg3);color:var(--dim);font-weight:600;
 padding:7px 10px;text-align:center;border-bottom:1px solid var(--border);
@@ -391,7 +391,28 @@ border-radius:8px;transition:all .15s;
 }
 .mob-btn.active{color:var(--cyan);background:rgba(34,211,238,.08)}
 .mob-btn .mob-icon{font-size:16px}
-#content{padding-bottom:70px}
+#content{padding-bottom:130px}
+#mob-day-bar{
+display:none;position:fixed;bottom:62px;left:0;right:0;
+background:var(--bg2);border-top:1px solid var(--border);
+z-index:99;padding:8px;
+flex-direction:row;gap:4px;overflow-x:auto;
+-webkit-overflow-scrolling:touch;
+}
+#mob-day-bar.open{display:flex!important}
+#mob-day-list{display:flex;gap:4px;flex:1}
+.mob-day-chip{
+padding:6px 12px;border-radius:20px;border:1px solid var(--border);
+background:transparent;color:var(--dim2);cursor:pointer;
+font-family:var(--font);font-size:11px;font-weight:600;
+white-space:nowrap;transition:all .15s;
+}
+.mob-day-chip.active{background:var(--cyan);color:#000;border-color:var(--cyan)}
+.mob-day-add{
+padding:6px 12px;border-radius:20px;border:1px dashed var(--cyan);
+background:transparent;color:var(--cyan);cursor:pointer;
+font-family:var(--font);font-size:11px;font-weight:600;white-space:nowrap;
+}
 #page{padding:10px}
 
 /* Stack ventas/compras vertically on mobile */
@@ -475,6 +496,12 @@ tbody tr{height:44px}
 </div>
 
 <!-- ══ MOBILE NAV ══ -->
+<!-- Mobile day selector -->
+<div id="mob-day-bar" style="display:none">
+<div id="mob-day-list"></div>
+<button class="mob-day-add" onclick="addDay()">+ Nuevo día</button>
+</div>
+
 <div id="mobile-nav">
 <button class="mob-btn active" onclick="setView('dia');setMobActive(this)" id="mob-dia">
 <span class="mob-icon">📅</span>Día
@@ -482,17 +509,17 @@ tbody tr{height:44px}
 <button class="mob-btn" onclick="setView('mes');setMobActive(this)" id="mob-mes">
 <span class="mob-icon">📊</span>Mes
 </button>
-<button class="mob-btn" onclick="addDay()">
-<span class="mob-icon">+</span>Día nuevo
+<button class="mob-btn" onclick="toggleMobDays()" id="mob-days-btn">
+<span class="mob-icon">🗓</span>Días
+</button>
+<button class="mob-btn" onclick="syncNow()">
+<span class="mob-icon">☁</span>Sync
 </button>
 <button class="mob-btn" onclick="exportExcel()">
 <span class="mob-icon">⬇</span>Excel
 </button>
 <button class="mob-btn" onclick="openConfig()">
 <span class="mob-icon">🔗</span>Sheets
-</button>
-<button class="mob-btn" onclick="openAccMgr()">
-<span class="mob-icon">⚙</span>Cuentas
 </button>
 </div>
 
@@ -867,6 +894,20 @@ if(n) n.classList.toggle("active",x===v);
 });
 renderPage();
 }
+function toggleMobDays(){
+const bar=document.getElementById("mob-day-bar");
+bar.classList.toggle("open");
+renderMobDayList();
+}
+function renderMobDayList(){
+const list=document.getElementById("mob-day-list");
+if(!list) return;
+list.innerHTML=state.days.map((d,i)=>`
+<button class="mob-day-chip ${i===state.currentDay?"active":""}"
+onclick="setCurrentDay(${i});document.getElementById('mob-day-bar').classList.remove('open')">
+${d.label||`Día ${String(i+1).padStart(2,"0")}`}
+</button>`).join("");
+}
 function setMobActive(el){
 document.querySelectorAll(".mob-btn").forEach(b=>b.classList.remove("active"));
 el.classList.add("active");
@@ -896,6 +937,7 @@ wrap.appendChild(inp);
 }
 container.appendChild(wrap);
 });
+renderMobDayList();
 }
 
 function renderPage(){
@@ -987,7 +1029,8 @@ const acc=state.accounts.find(a=>a.cod===r.cod);
 const cop=n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):"";
 trows+=`<tr id="mov-row-${tipo}-${i}" style="opacity:${r.done?'.5':'1'}">
 <td><button class="del-btn" id="chk-${tipo}-${i}" onclick="toggleDone('${tipo}',${i})">${r.done?"✅":"☐"}</button></td>
-<td><input class="ti" value="${r.nombre}" placeholder="Nombre"
+<td style="min-width:130px"><input class="ti" value="${r.nombre}" placeholder="Nombre"
+style="min-width:120px"
 oninput="updateMov('${tipo}',${i},'nombre',this.value)"/></td>
 <td><input class="ni" style="width:52px;text-align:center" value="${r.cod}" placeholder="COD"
 oninput="updateMov('${tipo}',${i},'cod',this.value.toUpperCase())" list="cods-list"/></td>
@@ -1011,7 +1054,7 @@ return `<div class="card" id="mov-${tipo}">
 <span class="card-title ${tclass}">${title}</span>
 </div>
 <div class="tbl-wrap"><table>
-<thead><tr><th></th><th>NOMBRE</th><th>COD</th><th class="hide-mob">CUENTA</th><th>TASA</th><th>Bs</th><th class="hide-mob">PESOS</th><th></th></tr></thead>
+<thead><tr><th></th><th style="min-width:130px">NOMBRE</th><th>COD</th><th class="hide-mob">CUENTA</th><th>TASA</th><th>Bs</th><th class="hide-mob">PESOS</th><th></th></tr></thead>
 <tbody>${trows}</tbody>
 <tfoot><tr><td colspan="4">TOTAL</td>
 <td id="${tipo}-tot-bs">${fmt(totBs,2)}</td>
