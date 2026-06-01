@@ -1398,7 +1398,7 @@ rows.push(["RESUMEN DEL DÍA"]);
 ].forEach(([l,v])=>rows.push([l,v]));
 const ws=XLSX.utils.aoa_to_sheet(rows);
 ws["!cols"]=Array(14).fill({wch:16});
-XLSX.utils.book_append_sheet(wb,ws,lbl.replace(/[\/\\?*\[\]:]/, '-').slice(0,31));
+XLSX.utils.book_append_sheet(wb,ws,lbl.replace(/[\/\?*\[\]:]/g,'-').slice(0,31));
 });
 // Por cliente
 const clientMap={};
