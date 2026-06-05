@@ -1256,6 +1256,8 @@ body=`<div class="factura-wrap">
 <div class="fac-header"><div class="fac-name">${clienteFiltro.toUpperCase()}</div><div class="fac-date">${day.label}</div></div>
 ${vs}${cs}${neto}
 <button class="copy-btn" onclick="copyFactura(\`${copyText.replace(/`/g,"'")}\`)">📋 Copiar resumen para WhatsApp</button>
+    <button class="copy-btn" style="background:linear-gradient(135deg,#0369a1,#0ea5e9);margin-top:6px;color:#fff;font-weight:700" onclick="copiarParaExcel(clienteFiltro)">📊 Copiar para Excel</button>
+    <button class="copy-btn" style="background:linear-gradient(135deg,#16a34a,#22c55e);margin-top:6px;color:#000;font-weight:700" onclick="exportClienteExcel(clienteFiltro)">⬇ Exportar a Excel</button>
 </div>`;
 } else {
 body=`<div class="empty-msg">Escribe el nombre para ver sus transacciones</div>`;
@@ -1472,6 +1474,121 @@ try{
 showToast("Excel descargado ✓","ok");
 }
 
+
+
+// ══ COPIAR PARA EXCEL ══════════════════════════════════════
+function copiarParaExcel(nombre){
+  const day = state.days[state.currentDay];
+  const filtV = day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase().includes(nombre.toLowerCase())&&n(v.bs)>0);
+  const filtC = day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase().includes(nombre.toLowerCase())&&n(c.bs)>0);
+  
+  let rows = [];
+  
+  filtV.forEach(v=>{
+    rows.push(`bs\t${fmt(n(v.bs),2).replace(/\./g,',')}\t${fmt(n(v.tasa),4).replace(/\./g,',')}`);
+  });
+  
+  filtC.forEach(c=>{
+    rows.push(`bs\t${fmt(n(c.bs),2).replace(/\./g,',')}\t${fmt(n(c.tasa),4).replace(/\./g,',')}`);
+  });
+  
+  const text = rows.join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    showToast('✅ Copiado — pega directo en Excel');
+  }).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    showToast('✅ Copiado — pega directo en Excel');
+  });
+}
+// ══ EXPORTAR CLIENTE A EXCEL ════════════════════════════════
+function exportClienteExcel(nombre){
+  const day = state.days[state.currentDay];
+  const filtV = day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase().includes(nombre.toLowerCase())&&n(v.bs)>0);
+  const filtC = day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase().includes(nombre.toLowerCase())&&n(c.bs)>0);
+
+  const wb = XLSX.utils.book_new();
+  const rows = [];
+
+  // Header
+  rows.push([nombre.toUpperCase(), '', '', '', '', '']);
+  rows.push(['Fecha:', day.label, '', '', '', '']);
+  rows.push(['']);
+  rows.push(['DESCRIPCION', 'MONTO Bs', 'TASA', 'TOTAL PESOS', 'CUENTA', '']);
+
+  let totalVBs=0, totalVCop=0;
+  if(filtV.length>0){
+    rows.push(['── VENTAS (Lo que me debe) ──', '', '', '', '', '']);
+    filtV.forEach((v,i)=>{
+      const cop = n(v.bs)*n(v.tasa);
+      totalVBs += n(v.bs); totalVCop += cop;
+      const cuenta = state.accounts.find(a=>a.cod===v.cod)?.nombre||v.cod||'—';
+      rows.push([`Venta ${i+1}`, n(v.bs), n(v.tasa), cop, cuenta, '']);
+    });
+    rows.push(['TOTAL VENTAS', totalVBs, '', totalVCop, '', '']);
+    rows.push(['']);
+  }
+
+  let totalCBs=0, totalCCop=0;
+  if(filtC.length>0){
+    rows.push(['── COMPRAS (Lo que le debo) ──', '', '', '', '', '']);
+    filtC.forEach((c,i)=>{
+      const cop = n(c.bs)*n(c.tasa);
+      totalCBs += n(c.bs); totalCCop += cop;
+      const cuenta = state.accounts.find(a=>a.cod===c.cod)?.nombre||c.cod||'—';
+      rows.push([`Compra ${i+1}`, n(c.bs), n(c.tasa), cop, cuenta, '']);
+    });
+    rows.push(['TOTAL COMPRAS', totalCBs, '', totalCCop, '', '']);
+    rows.push(['']);
+  }
+
+  if(filtV.length>0 && filtC.length>0){
+    const netoBs = totalVBs - totalCBs;
+    const netoCop = totalVCop - totalCCop;
+    rows.push([netoBs>=0?'ME DEBE (Bs)':'LE DEBO (Bs)', Math.abs(netoBs), '', '', '', '']);
+    rows.push([netoCop>=0?'ME DEBE (COP)':'LE DEBO (COP)', '', '', Math.abs(netoCop), '', '']);
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Column widths
+  ws['!cols'] = [{wch:28},{wch:16},{wch:10},{wch:18},{wch:20},{wch:5}];
+
+  // Style header row
+  const range = XLSX.utils.decode_range(ws['!ref']);
+
+  // Format number cells
+  for(let R=4; R<=range.e.r; R++){
+    const bCell = XLSX.utils.encode_cell({r:R, c:1});
+    const cCell = XLSX.utils.encode_cell({r:R, c:3});
+    if(ws[bCell] && typeof ws[bCell].v === 'number'){
+      ws[bCell].z = '#,##0.00';
+    }
+    if(ws[cCell] && typeof ws[cCell].v === 'number'){
+      ws[cCell].z = '"$"#,##0';
+    }
+  }
+
+  const sheetName = nombre.replace(/[\/\\?*\[\]:]/g,'-').slice(0,31);
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+  try{
+    XLSX.writeFile(wb, `${nombre}_${day.label.replace(/\//g,'-')}.xlsx`);
+  }catch(e){
+    const wbout = XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob = new Blob([wbout],{type:'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`${nombre}_${day.label.replace(/\//g,'-')}.xlsx`;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+  }
+}
 // ══ INIT ═══════════════════════════════════════════════════
 async function init(){
 loadLocal();
