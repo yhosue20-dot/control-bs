@@ -1283,25 +1283,47 @@ ${clienteFiltro?`<button class="del-btn" style="font-size:18px" onclick="cliente
 }
 
 function buildFacturaText(nombre,ventas,compras,tVBs,tVCop,tCBs,tCCop,fecha){
-let txt="━━━━━━━━━━━━━━━━━━━━━━━\n";
-txt+=` ${nombre.toUpperCase()}\n ${fecha}\n`;
-txt+="━━━━━━━━━━━━━━━━━━━━━━━\n";
+const nums=['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+const sep='━━━━━━━━━━━━━━━━━━━━━';
+let txt=sep+'\n';
+txt+='💱 *CAMBIO DE BOLÍVARES*\n';
+txt+=sep+'\n';
+txt+=`👤 *${nombre.toUpperCase()}*\n`;
+txt+=`📅 ${fecha}\n`;
 if(ventas.length>0){
-txt+="\n 📤 VENTAS\n\n";
-ventas.forEach((v,i)=>{const cop=n(v.bs)*n(v.tasa);txt+=` ${i+1}. ${fmt(n(v.bs),2)} Bs\n Tasa: ${fmt(n(v.tasa),4)}\n Total: ${fmtCOP(cop)}\n\n`;});
-txt+=` Total Bs: ${fmt(tVBs,2)} | COP: ${fmtCOP(tVCop)}\n`;
+txt+=sep+'\n';
+txt+='📤 *VENTAS — Lo que me debe*\n';
+txt+=sep+'\n';
+ventas.forEach((v,i)=>{
+  const cop=n(v.bs)*n(v.tasa);
+  const num=nums[i]||(i+1)+'.';
+  txt+=`${num} Bs ${fmt(n(v.bs),2)} × ${fmt(n(v.tasa),4)} = *${fmtCOP(cop)}*\n`;
+});
+txt+=sep+'\n';
+txt+=`📊 Total Bs: *${fmt(tVBs,2)}*\n`;
+txt+=`💵 Total COP: *${fmtCOP(tVCop)}*\n`;
 }
 if(compras.length>0){
-txt+="\n 📥 COMPRAS\n\n";
-compras.forEach((c,i)=>{const cop=n(c.bs)*n(c.tasa);txt+=` ${i+1}. ${fmt(n(c.bs),2)} Bs\n Tasa: ${fmt(n(c.tasa),4)}\n Total: ${fmtCOP(cop)}\n\n`;});
-txt+=` Total Bs: ${fmt(tCBs,2)} | COP: ${fmtCOP(tCCop)}\n`;
+txt+=sep+'\n';
+txt+='📥 *COMPRAS — Lo que le debo*\n';
+txt+=sep+'\n';
+compras.forEach((c,i)=>{
+  const cop=n(c.bs)*n(c.tasa);
+  const num=nums[i]||(i+1)+'.';
+  txt+=`${num} Bs ${fmt(n(c.bs),2)} × ${fmt(n(c.tasa),4)} = *${fmtCOP(cop)}*\n`;
+});
+txt+=sep+'\n';
+txt+=`📊 Total Bs: *${fmt(tCBs,2)}*\n`;
+txt+=`💵 Total COP: *${fmtCOP(tCCop)}*\n`;
 }
 if(ventas.length>0&&compras.length>0){
 const nBS=tVBs-tCBs,nCOP=tVCop-tCCop;
-txt+="\n ⚖️ SALDO NETO\n";
-txt+=` ${nBS>=0?"Me debe":"Le debo"}: ${fmt(Math.abs(nBS),2)} Bs / ${fmtCOP(Math.abs(nCOP))}\n`;
+txt+=sep+'\n';
+txt+=`⚖️ *${nBS>=0?'ME DEBE':'LE DEBO'}*\n`;
+txt+=`🔹 Bs: *${fmt(Math.abs(nBS),2)}*\n`;
+txt+=`🔹 COP: *${fmtCOP(Math.abs(nCOP))}*\n`;
 }
-txt+="━━━━━━━━━━━━━━━━━━━━━━━";
+txt+=sep;
 return txt;
 }
 function copyFactura(text){
