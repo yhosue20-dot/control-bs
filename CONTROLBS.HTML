@@ -571,8 +571,10 @@ const DEFAULT_ACCOUNTS = [
 ];
 let state = { accounts:DEFAULT_ACCOUNTS, days:[], currentDay:0, scriptUrl:"" };
 let currentView = "dia";
+let cuentaFiltro = { ventas: "", compras: "" };
 let clienteFiltro = "";
 let directoData = {cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
+let traspasoData = {origen:"",destino:"",bs:"",comision:""};
 let syncTimer = null;
 let toastTimer = null;
 
@@ -961,6 +963,7 @@ ${renderMovHTML(day,"ventas")}
 ${renderMovHTML(day,"compras")}
 </div>
 ${renderDirectoHTML()}
+${renderTraspasoHTML()}
 ${renderResumenHTML(day)}
 ${renderClienteHTML()}
 `;
@@ -1024,17 +1027,47 @@ onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumF
 }
 
 // MOV TABLE
+function setCuentaFiltro(tipo, cod){
+  cuentaFiltro[tipo] = cuentaFiltro[tipo]===cod ? "" : cod;
+  const day = state.days[state.currentDay];
+  const el = document.getElementById('mov-'+tipo);
+  if(el) el.outerHTML = renderMovHTML(day, tipo);
+}
+
 function renderMovHTML(day,tipo){
 const isV=tipo==="ventas";
 const title=isV?"📤 VENTAS":"📥 COMPRAS";
 const tclass=isV?"t-blue":"t-green";
 const rows=day[tipo];
-const totBs=rows.reduce((a,r)=>a+n(r.bs),0);
-const totCop=rows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
+const filtro=cuentaFiltro[tipo]||"";
+
+// Build account filter buttons
+const cuentasUsadas=[...new Set(rows.filter(r=>r.cod&&n(r.bs)>0).map(r=>r.cod))];
+let filterBtns="";
+if(cuentasUsadas.length>1){
+  const btnStyle=(active)=>`style="padding:3px 8px;border-radius:12px;border:1px solid var(--border);background:${active?'var(--cyan)':'var(--bg3)'};color:${active?'#000':'var(--dim2)'};font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);margin:1px"`;
+  filterBtns+=`<div style="padding:6px 8px;display:flex;flex-wrap:wrap;gap:3px;border-bottom:1px solid var(--border)">`;
+  filterBtns+=`<button ${btnStyle(!filtro)} onclick="setCuentaFiltro('${tipo}','')">Todas</button>`;
+  cuentasUsadas.forEach(cod=>{
+    const acc=state.accounts.find(a=>a.cod===cod);
+    const label=acc?acc.nombre.split(' ')[0]+' '+acc.nombre.split(' ')[1]||cod:cod;
+    filterBtns+=`<button ${btnStyle(filtro===cod)} onclick="setCuentaFiltro('${tipo}','${cod}')">${cod}</button>`;
+  });
+  filterBtns+=`</div>`;
+}
+
+const visibleRows = filtro ? rows.map((r,i)=>({...r,_i:i})).filter(r=>r.cod===filtro) : rows.map((r,i)=>({...r,_i:i}));
+const totBs=visibleRows.reduce((a,r)=>a+n(r.bs),0);
+const totCop=visibleRows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
 let trows="";
-rows.forEach((r,i)=>{
+visibleRows.forEach((r)=>{
+const i=r._i;
 const acc=state.accounts.find(a=>a.cod===r.cod);
 const cop=n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):"";
+const comVal = isV&&r.comision ? n(r.comision) : 0;
+const comBs = comVal>0 ? n(r.bs)*comVal/100 : 0;
+const comCop = comBs>0 ? comBs*n(r.tasa) : 0;
+const comExpanded = isV&&r._comExpanded ? 'block' : 'none';
 trows+=`<tr id="mov-row-${tipo}-${i}" style="opacity:${r.done?'.5':'1'}">
 <td><button class="del-btn" id="chk-${tipo}-${i}" onclick="toggleDone('${tipo}',${i})">${r.done?"✅":"☐"}</button></td>
 <td style="min-width:130px"><input class="ti" value="${r.nombre}" placeholder="Nombre"
@@ -1053,14 +1086,30 @@ onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumF
 ${cop?`<div class="mob-cop" id="${tipo}-cop-mob-${i}">= ${fmtCOP(n(r.bs)*n(r.tasa))}</div>`:`<div class="mob-cop" id="${tipo}-cop-mob-${i}"></div>`}
 </td>
 <td class="td-dim hide-mob" id="${tipo}-cop-${i}">${cop}</td>
-<td><button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button></td>
-</tr>`;
+<td>
+${isV?`<button class="del-btn" title="Comisión" onclick="toggleComision('ventas',${i})" style="font-size:10px;color:${comVal>0?'var(--red)':'var(--dim)'}">%</button>`:''}
+<button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button>
+</td>
+</tr>
+${isV?`<tr id="com-row-ventas-${i}" style="display:${comExpanded};background:rgba(239,68,68,.05)">
+<td colspan="8" style="padding:4px 12px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<span style="font-size:10px;color:var(--dim)">Comisión %</span>
+<input class="ni-fmt" inputmode="decimal" value="${r.comision||''}" placeholder="ej: 0.3"
+style="width:70px;border-color:rgba(239,68,68,.4)"
+oninput="let v=rawNum(this.value);updateMov('ventas',${i},'comision',v)"
+onblur="let v=rawNum(this.value);this.value=v||''"/>
+${comBs>0?`<span style="font-size:10px;color:var(--red)">✂️ ${fmt(comBs,2)} Bs = ${fmtCOP(comCop)}</span>`:''}
+</div>
+</td>
+</tr>`:''}`;
 });
 return `<div class="card" id="mov-${tipo}">
 <datalist id="cods-list">${state.accounts.map(a=>`<option value="${a.cod}">`).join("")}</datalist>
 <div class="card-header">
 <span class="card-title ${tclass}">${title}</span>
 </div>
+${filterBtns}
 <div class="tbl-wrap"><table>
 <thead><tr><th></th><th style="min-width:130px">NOMBRE</th><th>COD</th><th class="hide-mob">CUENTA</th><th>TASA</th><th>Bs</th><th class="hide-mob">PESOS</th><th></th></tr></thead>
 <tbody>${trows}</tbody>
@@ -1508,7 +1557,7 @@ function copiarParaExcel(nombre){
   const fmtNum = (val,dec) => Number(val).toLocaleString('es-CO',{minimumFractionDigits:dec,maximumFractionDigits:dec});
   let rows = [];
   day.ventas.forEach((v,i)=>{
-    if(v.nombre&&v.nombre.toLowerCase().includes(nombre.toLowerCase())&&n(v.bs)>0){
+    if(v.nombre&&v.nombre.toLowerCase()===nombre.toLowerCase()&&n(v.bs)>0){
       rows.push('bs\t'+fmtNum(n(v.bs),2)+'\t'+fmtNum(n(v.tasa),4));
       day.ventas[i].done=true;
       const row=document.getElementById('mov-row-ventas-'+i);
@@ -1518,7 +1567,7 @@ function copiarParaExcel(nombre){
     }
   });
   day.compras.forEach((c,i)=>{
-    if(c.nombre&&c.nombre.toLowerCase().includes(nombre.toLowerCase())&&n(c.bs)>0){
+    if(c.nombre&&c.nombre.toLowerCase()===nombre.toLowerCase()&&n(c.bs)>0){
       rows.push('bs\t'+fmtNum(n(c.bs),2)+'\t'+fmtNum(n(c.tasa),4));
       day.compras[i].done=true;
       const row=document.getElementById('mov-row-compras-'+i);
@@ -1538,8 +1587,8 @@ function copiarParaExcel(nombre){
 // ══ EXPORTAR CLIENTE A EXCEL ════════════════════════════════
 function exportClienteExcel(nombre){
   const day = state.days[state.currentDay];
-  const filtV = day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase().includes(nombre.toLowerCase())&&n(v.bs)>0);
-  const filtC = day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase().includes(nombre.toLowerCase())&&n(c.bs)>0);
+  const filtV = day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase()===nombre.toLowerCase()&&n(v.bs)>0);
+  const filtC = day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase()===nombre.toLowerCase()&&n(c.bs)>0);
 
   const wb = XLSX.utils.book_new();
   const rows = [];
@@ -1618,6 +1667,151 @@ function exportClienteExcel(nombre){
     setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
   }
 }
+
+
+function toggleComision(tipo, idx){
+  const day = state.days[state.currentDay];
+  day[tipo][idx]._comExpanded = !day[tipo][idx]._comExpanded;
+  const row = document.getElementById('com-row-'+tipo+'-'+idx);
+  if(row) row.style.display = day[tipo][idx]._comExpanded ? 'table-row' : 'none';
+}
+// ══ TRASPASO INTERNO ════════════════════════════════════════
+function updateTraspaso(field, val){
+  if(field==='bs'||field==='comision') traspasoData[field]=rawNum(val)||val;
+  else traspasoData[field]=val;
+  // Update preview
+  const prev = document.getElementById('traspaso-preview');
+  if(!prev) return;
+  const bs=n(traspasoData.bs), com=n(traspasoData.comision)||0;
+  if(!bs){ prev.innerHTML=''; return; }
+  const comBs = bs * com / 100;
+  const bsNeto = bs - comBs;
+  // Use promedio compra of day as rate
+  const day = state.days[state.currentDay];
+  const res = calcResumen(day);
+  const tasa = res.promCompra || 0;
+  const comCop = comBs * tasa;
+  let html = `<div style="font-size:11px;color:var(--dim2);margin-top:6px;padding:8px;background:var(--bg3);border-radius:8px;line-height:1.8">`;
+  html += `🔁 <b>${traspasoData.origen||'?'}</b> → <b>${traspasoData.destino||'?'}</b><br>`;
+  html += `📦 Bs trasladados: <b style="color:var(--cyan)">${fmt(bsNeto,2)}</b><br>`;
+  if(com>0){
+    html += `✂️ Comisión (${com}%): <b style="color:var(--red)">${fmt(comBs,2)} Bs</b>`;
+    if(tasa>0) html += ` = <b style="color:var(--red)">${fmtCOP(comCop)}</b>`;
+    html += `<br>`;
+  }
+  html += `</div>`;
+  prev.innerHTML = html;
+}
+
+function ejecutarTraspaso(){
+  const bs=n(traspasoData.bs);
+  const com=n(traspasoData.comision)||0;
+  const origen=traspasoData.origen;
+  const destino=traspasoData.destino;
+  if(!origen){showToast('Selecciona cuenta origen','err');return;}
+  if(!destino){showToast('Selecciona cuenta destino','err');return;}
+  if(origen===destino){showToast('Origen y destino iguales','err');return;}
+  if(!bs||bs<=0){showToast('Ingresa el monto en Bs','err');return;}
+
+  const day = state.days[state.currentDay];
+  const accOrigen = day.saldos.find(s=>s.cod===origen);
+  const accDestino = day.saldos.find(s=>s.cod===destino);
+  if(!accOrigen||!accDestino){showToast('Cuenta no encontrada','err');return;}
+
+  const comBs = bs * com / 100;
+  const bsNeto = bs - comBs;
+
+  // Move Bs between accounts
+  accOrigen.bs = (n(accOrigen.bs)||0) - bs;
+  accDestino.bs = (n(accDestino.bs)||0) + bsNeto;
+
+  // Log the traspaso as a note in the day
+  if(!day.traspasos) day.traspasos=[];
+  const res = calcResumen(day);
+  const tasa = res.promCompra || 0;
+  day.traspasos.push({
+    origen, destino, bs, comision:com, comBs,
+    comCop: comBs*tasa, tasa, fecha: day.label
+  });
+
+  saveLocal();
+  if(state.scriptUrl) syncSave();
+  traspasoData={origen:"",destino:"",bs:"",comision:""};
+  render();
+  showToast(`✅ Traspaso registrado`,'ok');
+}
+
+function renderTraspasoHTML(){
+  const accs = state.accounts.filter(a=>a.cod!=='DR');
+  const opts = accs.map(a=>`<option value="${a.cod}">${a.cod} — ${a.nombre}</option>`).join('');
+  const day = state.days[state.currentDay];
+  const traspasos = day.traspasos||[];
+
+  let historial='';
+  if(traspasos.length>0){
+    historial='<div style="margin-top:10px;font-size:11px;color:var(--dim2)">';
+    historial+='<div style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--dim);margin-bottom:6px">HISTORIAL DEL DÍA</div>';
+    traspasos.forEach((t,i)=>{
+      historial+=`<div style="padding:6px 8px;background:var(--bg3);border-radius:6px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">`;
+      historial+=`<span>🔁 ${t.origen}→${t.destino} · <b style="color:var(--cyan)">${fmt(t.bs,2)} Bs</b>`;
+      if(t.comision>0) historial+=` · ✂️${fmt(t.comBs,2)} Bs ${t.comCop>0?'= '+fmtCOP(t.comCop):''}`;
+      historial+=`</span>`;
+      historial+=`<button class="del-btn" onclick="delTraspaso(${i})" style="font-size:11px">×</button>`;
+      historial+=`</div>`;
+    });
+    historial+='</div>';
+  }
+
+  return `<div class="card" id="traspaso-block">
+<div class="card-header"><span class="card-title" style="color:var(--purple)">🔁 TRASPASO INTERNO</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px">
+  <div>
+    <div style="font-size:9px;color:var(--dim);font-weight:700;margin-bottom:4px">ORIGEN</div>
+    <select class="ni" style="width:100%;padding:8px" onchange="updateTraspaso('origen',this.value)">
+      <option value="">Seleccionar...</option>${opts}
+    </select>
+  </div>
+  <div>
+    <div style="font-size:9px;color:var(--dim);font-weight:700;margin-bottom:4px">DESTINO</div>
+    <select class="ni" style="width:100%;padding:8px" onchange="updateTraspaso('destino',this.value)">
+      <option value="">Seleccionar...</option>${opts}
+    </select>
+  </div>
+  <div>
+    <div style="font-size:9px;color:var(--dim);font-weight:700;margin-bottom:4px">MONTO Bs</div>
+    <input class="ni-fmt" inputmode="decimal" placeholder="0,00" style="width:100%"
+      oninput="let v=rawNum(this.value);updateTraspaso('bs',v)"
+      onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/>
+  </div>
+  <div>
+    <div style="font-size:9px;color:var(--dim);font-weight:700;margin-bottom:4px">COMISIÓN % <span style="color:var(--dim2)">(opcional)</span></div>
+    <input class="ni-fmt" inputmode="decimal" placeholder="0.3" style="width:100%"
+      oninput="let v=rawNum(this.value);updateTraspaso('comision',v)"
+      onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/>
+  </div>
+</div>
+<div id="traspaso-preview" style="padding:0 12px"></div>
+<button class="add-row-btn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;margin:8px 12px;width:calc(100% - 24px)"
+  onclick="ejecutarTraspaso()">🔁 Ejecutar Traspaso</button>
+${historial}
+</div>`;
+}
+
+function delTraspaso(idx){
+  const day=state.days[state.currentDay];
+  if(!day.traspasos) return;
+  const t=day.traspasos[idx];
+  // Reverse the saldo movement
+  const accOrigen=day.saldos.find(s=>s.cod===t.origen);
+  const accDestino=day.saldos.find(s=>s.cod===t.destino);
+  if(accOrigen) accOrigen.bs=(n(accOrigen.bs)||0)+t.bs;
+  if(accDestino) accDestino.bs=(n(accDestino.bs)||0)-(t.bs-t.comBs);
+  day.traspasos.splice(idx,1);
+  saveLocal();
+  render();
+  showToast('Traspaso eliminado','ok');
+}
+
 // ══ INIT ═══════════════════════════════════════════════════
 async function init(){
 loadLocal();
