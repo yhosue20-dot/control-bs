@@ -1100,9 +1100,18 @@ ${isV?`<tr id="com-row-ventas-${i}" style="display:${comExpanded};background:rgb
 <span style="font-size:10px;color:var(--dim)">Comisión %</span>
 <input class="ni-fmt" inputmode="decimal" value="${r.comision||''}" placeholder="ej: 0.3"
 style="width:70px;border-color:rgba(239,68,68,.4)"
-oninput="let v=rawNum(this.value);updateMov('ventas',${i},'comision',v)"
+oninput="
+  let v=rawNum(this.value);
+  updateMov('ventas',${i},'comision',v);
+  const bs=n(state.days[state.currentDay].ventas[${i}].bs);
+  const tasa=n(state.days[state.currentDay].ventas[${i}].tasa);
+  const comBs=bs*(v||0)/100;
+  const comCop=comBs*tasa;
+  const sp=document.getElementById('com-preview-${i}');
+  if(sp) sp.innerHTML=comBs>0?'✂️ '+fmt(comBs,2)+' Bs = '+fmtCOP(comCop):'';
+"
 onblur="let v=rawNum(this.value);this.value=v||''"/>
-${comBs>0?`<span style="font-size:10px;color:var(--red)">✂️ Sale de tu cuenta: <b>${fmt(comBs,2)} Bs</b> = <b>${fmtCOP(comCop)}</b></span>`:''}
+<span id="com-preview-${i}" style="font-size:10px;color:var(--red);white-space:nowrap">${comBs>0?'✂️ '+fmt(comBs,2)+' Bs = '+fmtCOP(comCop):''}</span>
 </div>
 </td>
 </tr>`:''}`;
