@@ -640,7 +640,7 @@ const bsComp=comprasReales.reduce((a,c)=>a+n(c.bs),0);
 const copComp=comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
 const bsVend=ventasReales.reduce((a,v)=>a+n(v.bs),0);
 const copVend=ventasReales.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
-// Commission costs: extra Bs that leave your account
+// Commission - informational only, does NOT affect utilidad or saldo
 const comisionBsTotal=ventasReales.reduce((a,v)=>{ const c=n(v.comision)||0; return a+(c>0?n(v.bs)*c/100:0); },0);
 const comisionCopTotal=ventasReales.reduce((a,v)=>{ const c=n(v.comision)||0; return a+(c>0?n(v.bs)*c/100*n(v.tasa):0); },0);
 const copVentaDir=ventasDirectas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
@@ -649,7 +649,7 @@ const utilidadDirecta=copVentaDir-copCompraDir;
 const promCompra=calcPromCompraReal(day);
 const promVenta=bsVend>0?copVend/bsVend:0;
 const utilidad=(promVenta-promCompra)*bsVend+utilidadDirecta;
-const quedaBs=inicioBs+bsComp-bsVend-comisionBsTotal;
+const quedaBs=inicioBs+bsComp-bsVend;
 const valorPesos=quedaBs*promCompra;
 const bsCompTotal=bsComp+comprasDirectas.reduce((a,c)=>a+n(c.bs),0);
 const copCompTotal=copComp+copCompraDir;
@@ -1089,17 +1089,10 @@ onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumF
 ${cop?`<div class="mob-cop" id="${tipo}-cop-mob-${i}">= ${fmtCOP(n(r.bs)*n(r.tasa))}</div>`:`<div class="mob-cop" id="${tipo}-cop-mob-${i}"></div>`}
 </td>
 <td class="td-dim hide-mob" id="${tipo}-cop-${i}">${cop}</td>
-<td>
-${isV?`<button class="del-btn" title="Comisión" onclick="toggleComision('ventas',${i})" style="font-size:10px;color:${comVal>0?'var(--red)':'var(--dim)'}">%</button>`:''}
-<button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button>
-</td>
-</tr>
-${isV?`<tr id="com-row-ventas-${i}" style="display:${comExpanded};background:rgba(239,68,68,.05)">
-<td colspan="8" style="padding:4px 12px">
-<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-<span style="font-size:10px;color:var(--dim)">Comisión %</span>
-<input class="ni-fmt" inputmode="decimal" value="${r.comision||''}" placeholder="ej: 0.3"
-style="width:70px;border-color:rgba(239,68,68,.4)"
+<td style="min-width:90px">
+${isV?`<div style="display:flex;flex-direction:column;gap:2px;align-items:flex-start">
+<input class="ni-fmt" inputmode="decimal" value="${r.comision||''}" placeholder="%" 
+style="width:52px;border-color:${comVal>0?'rgba(239,68,68,.5)':'var(--border)'};font-size:11px;padding:3px 5px;text-align:center"
 oninput="
   let v=rawNum(this.value);
   updateMov('ventas',${i},'comision',v);
@@ -1108,13 +1101,15 @@ oninput="
   const comBs=bs*(v||0)/100;
   const comCop=comBs*tasa;
   const sp=document.getElementById('com-preview-${i}');
-  if(sp) sp.innerHTML=comBs>0?'✂️ '+fmt(comBs,2)+' Bs = '+fmtCOP(comCop):'';
+  if(sp) sp.innerHTML=comBs>0?fmtCOP(comCop):'';
 "
 onblur="let v=rawNum(this.value);this.value=v||''"/>
-<span id="com-preview-${i}" style="font-size:10px;color:var(--red);white-space:nowrap">${comBs>0?'✂️ '+fmt(comBs,2)+' Bs = '+fmtCOP(comCop):''}</span>
-</div>
+<span id="com-preview-${i}" style="font-size:9px;color:var(--red);white-space:nowrap">${comBs>0?fmtCOP(comCop):''}</span>
+</div>`:''}
 </td>
-</tr>`:''}`;
+<td><button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button></td>
+</tr>
+`;
 });
 return `<div class="card" id="mov-${tipo}">
 <datalist id="cods-list">${state.accounts.map(a=>`<option value="${a.cod}">`).join("")}</datalist>
@@ -1123,7 +1118,7 @@ return `<div class="card" id="mov-${tipo}">
 </div>
 ${filterBtns}
 <div class="tbl-wrap"><table>
-<thead><tr><th></th><th style="min-width:130px">NOMBRE</th><th>COD</th><th class="hide-mob">CUENTA</th><th>TASA</th><th>Bs</th><th class="hide-mob">PESOS</th><th></th></tr></thead>
+<thead><tr><th></th><th style="min-width:130px">NOMBRE</th><th>COD</th><th class="hide-mob">CUENTA</th><th>TASA</th><th>Bs</th><th class="hide-mob">PESOS</th><th style="font-size:9px;color:var(--dim)">COM%</th><th></th></tr></thead>
 <tbody>${trows}</tbody>
 <tfoot><tr><td colspan="4">TOTAL</td>
 <td id="${tipo}-tot-bs">${fmt(totBs,2)}</td>
@@ -1682,12 +1677,6 @@ function exportClienteExcel(nombre){
 }
 
 
-function toggleComision(tipo, idx){
-  const day = state.days[state.currentDay];
-  day[tipo][idx]._comExpanded = !day[tipo][idx]._comExpanded;
-  const row = document.getElementById('com-row-'+tipo+'-'+idx);
-  if(row) row.style.display = day[tipo][idx]._comExpanded ? 'table-row' : 'none';
-}
 // ══ TRASPASO INTERNO ════════════════════════════════════════
 function updateTraspaso(field, val){
   if(field==='bs'||field==='comision') traspasoData[field]=rawNum(val)||val;
