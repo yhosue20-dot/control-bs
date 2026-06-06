@@ -640,13 +640,16 @@ const bsComp=comprasReales.reduce((a,c)=>a+n(c.bs),0);
 const copComp=comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
 const bsVend=ventasReales.reduce((a,v)=>a+n(v.bs),0);
 const copVend=ventasReales.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
+// Commission costs: extra Bs that leave your account
+const comisionBsTotal=ventasReales.reduce((a,v)=>{ const c=n(v.comision)||0; return a+(c>0?n(v.bs)*c/100:0); },0);
+const comisionCopTotal=ventasReales.reduce((a,v)=>{ const c=n(v.comision)||0; return a+(c>0?n(v.bs)*c/100*n(v.tasa):0); },0);
 const copVentaDir=ventasDirectas.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0);
 const copCompraDir=comprasDirectas.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
 const utilidadDirecta=copVentaDir-copCompraDir;
 const promCompra=calcPromCompraReal(day);
 const promVenta=bsVend>0?copVend/bsVend:0;
 const utilidad=(promVenta-promCompra)*bsVend+utilidadDirecta;
-const quedaBs=inicioBs+bsComp-bsVend;
+const quedaBs=inicioBs+bsComp-bsVend-comisionBsTotal;
 const valorPesos=quedaBs*promCompra;
 const bsCompTotal=bsComp+comprasDirectas.reduce((a,c)=>a+n(c.bs),0);
 const copCompTotal=copComp+copCompraDir;
@@ -654,7 +657,7 @@ const bsVendTotal=bsVend+ventasDirectas.reduce((a,v)=>a+n(v.bs),0);
 const copVendTotal=copVend+copVentaDir;
 return {inicioBs,inicioPesos,bsComp:bsCompTotal,copComp:copCompTotal,bsVend:bsVendTotal,
 copVend:copVendTotal,bsCompReal:bsComp,bsVendReal:bsVend,utilidadDirecta,
-promCompra,promVenta,utilidad,quedaBs,valorPesos};
+promCompra,promVenta,utilidad,quedaBs,valorPesos,comisionBsTotal,comisionCopTotal};
 }
 
 // ══ STORAGE ════════════════════════════════════════════════
@@ -1099,7 +1102,7 @@ ${isV?`<tr id="com-row-ventas-${i}" style="display:${comExpanded};background:rgb
 style="width:70px;border-color:rgba(239,68,68,.4)"
 oninput="let v=rawNum(this.value);updateMov('ventas',${i},'comision',v)"
 onblur="let v=rawNum(this.value);this.value=v||''"/>
-${comBs>0?`<span style="font-size:10px;color:var(--red)">✂️ ${fmt(comBs,2)} Bs = ${fmtCOP(comCop)}</span>`:''}
+${comBs>0?`<span style="font-size:10px;color:var(--red)">✂️ Sale de tu cuenta: <b>${fmt(comBs,2)} Bs</b> = <b>${fmtCOP(comCop)}</b></span>`:''}
 </div>
 </td>
 </tr>`:''}`;
@@ -1139,6 +1142,7 @@ const items=[
 ["PROMEDIO COMPRA REAL",fmt(r.promCompra,4),"compra"],
 ["PROMEDIO VENTA",fmt(r.promVenta,4),"venta"],
 ["UTILIDAD DIRECTA (DR)",fmtCOP(r.utilidadDirecta),r.utilidadDirecta>=0?"compra":"loss"],
+...(r.comisionBsTotal>0?[["GASTO COMISIONES","-"+fmt(r.comisionBsTotal,2)+" Bs / "+fmtCOP(r.comisionCopTotal),"loss"]]:[]),
 ["UTILIDAD TOTAL",fmtCOP(r.utilidad),r.utilidad>=0?"win":"loss"],
 ["QUEDA EN Bs",fmt(r.quedaBs,2),""],
 ["VALOR EN PESOS (costo)",fmtCOP(r.valorPesos),""],
