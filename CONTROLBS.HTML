@@ -1101,10 +1101,10 @@ oninput="
   const comBs=bs*(v||0)/100;
   const comCop=comBs*tasa;
   const sp=document.getElementById('com-preview-${i}');
-  if(sp) sp.innerHTML=comBs>0?fmtCOP(comCop):'';
+  if(sp) sp.innerHTML=comBs>0?fmt(comBs,0)+' Bs / '+fmtCOP(comCop):'';
 "
 onblur="let v=rawNum(this.value);this.value=v||''"/>
-<span id="com-preview-${i}" style="font-size:9px;color:var(--red);white-space:nowrap">${comBs>0?fmtCOP(comCop):''}</span>
+<span id="com-preview-${i}" style="font-size:9px;color:var(--red);white-space:nowrap">${comBs>0?fmt(comBs,0)+' Bs / '+fmtCOP(comCop):''}</span>
 </div>`:''}
 </td>
 <td><button class="del-btn" onclick="delMovRow('${tipo}',${i})">×</button></td>
