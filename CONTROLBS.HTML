@@ -615,9 +615,12 @@ return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart
 
 // ══ CALCULATIONS ═══════════════════════════════════════════
 function calcStock(s,ventas,compras){
-const c=compras.filter(x=>x.cod===s.cod&&x.cod!=="DR").reduce((a,x)=>a+n(x.bs),0);
-const v=ventas.filter(x=>x.cod===s.cod&&x.cod!=="DR").reduce((a,x)=>a+n(x.bs),0);
-return n(s.inicioBs)+c-v;
+const c=compras.filter(x=>x.cod===s.cod&&x.cod!=="DR"&&!x._trasId).reduce((a,x)=>a+n(x.bs),0);
+const v=ventas.filter(x=>x.cod===s.cod&&x.cod!=="DR"&&!x._trasId).reduce((a,x)=>a+n(x.bs),0);
+// Add traspaso net effect: compras to this account minus ventas from this account
+const trasC=compras.filter(x=>x._trasId&&x.cod===s.cod).reduce((a,x)=>a+n(x.bs),0);
+const trasV=ventas.filter(x=>x._trasId&&x.cod===s.cod).reduce((a,x)=>a+n(x.bs),0);
+return n(s.inicioBs)+c-v+trasC-trasV;
 }
 function calcPromCompraReal(day){
 const totInicio=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
@@ -927,6 +930,17 @@ el.classList.add("active");
 }
 function render(){ renderDayList(); renderPage(); }
 
+
+function deleteDay(idx){
+  if(state.days.length<=1){showToast('No puedes eliminar el único día','err');return;}
+  if(!confirm('¿Eliminar este día y todos sus datos?')) return;
+  state.days.splice(idx,1);
+  if(state.currentDay>=state.days.length) state.currentDay=state.days.length-1;
+  saveLocal();
+  if(state.scriptUrl) syncSave();
+  render();
+  showToast('Día eliminado','ok');
+}
 function renderDayList(){
 const container=document.getElementById("day-list");
 if(!container) return;
@@ -938,7 +952,15 @@ const btn=document.createElement("button");
 btn.className="day-btn"+(i===state.currentDay?" active":"");
 btn.innerHTML=`<span>${d.label||`Día ${String(i+1).padStart(2,"0")}`}</span><span class="day-num">${String(i+1).padStart(2,"0")}</span>`;
 btn.onclick=()=>setCurrentDay(i);
+// Delete button
+const delBtn=document.createElement('button');
+delBtn.className='del-btn';
+delBtn.textContent='×';
+delBtn.title='Eliminar día';
+delBtn.style.cssText='font-size:13px;padding:2px 6px;opacity:.5;float:right;margin-top:2px';
+delBtn.onclick=(e)=>{e.stopPropagation();deleteDay(i);};
 wrap.appendChild(btn);
+wrap.appendChild(delBtn);
 if(i===state.currentDay){
 const inp=document.createElement("input");
 inp.className="day-label-inp"; inp.value=d.label||""; inp.placeholder="Nombre o fecha";
