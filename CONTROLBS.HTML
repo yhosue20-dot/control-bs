@@ -1716,18 +1716,18 @@ function ejecutarTraspaso(){
   if(!bs||bs<=0){showToast('Ingresa el monto en Bs','err');return;}
 
   const day = state.days[state.currentDay];
-  const accOrigen = day.saldos.find(s=>s.cod===origen);
-  const accDestino = day.saldos.find(s=>s.cod===destino);
-  if(!accOrigen||!accDestino){showToast('Cuenta no encontrada','err');return;}
+  const sOrigen = day.saldos.find(s=>s.cod===origen);
+  const sDestino = day.saldos.find(s=>s.cod===destino);
+  if(!sOrigen||!sDestino){showToast('Cuenta no encontrada en saldos','err');return;}
 
   const comBs = bs * com / 100;
   const bsNeto = bs - comBs;
 
-  // Move Bs between accounts
-  accOrigen.bs = (n(accOrigen.bs)||0) - bs;
-  accDestino.bs = (n(accDestino.bs)||0) + bsNeto;
+  // Adjust inicioBs directly — this moves Bs between accounts without touching promedios
+  sOrigen.inicioBs = (n(sOrigen.inicioBs)||0) - bs;
+  sDestino.inicioBs = (n(sDestino.inicioBs)||0) + bsNeto;
 
-  // Log the traspaso as a note in the day
+  // Log the traspaso
   if(!day.traspasos) day.traspasos=[];
   const res = calcResumen(day);
   const tasa = res.promCompra || 0;
@@ -1740,7 +1740,7 @@ function ejecutarTraspaso(){
   if(state.scriptUrl) syncSave();
   traspasoData={origen:"",destino:"",bs:"",comision:""};
   render();
-  showToast(`✅ Traspaso registrado`,'ok');
+  showToast('✅ Traspaso registrado','ok');
 }
 
 function renderTraspasoHTML(){
@@ -1803,11 +1803,11 @@ function delTraspaso(idx){
   const day=state.days[state.currentDay];
   if(!day.traspasos) return;
   const t=day.traspasos[idx];
-  // Reverse the saldo movement
-  const accOrigen=day.saldos.find(s=>s.cod===t.origen);
-  const accDestino=day.saldos.find(s=>s.cod===t.destino);
-  if(accOrigen) accOrigen.bs=(n(accOrigen.bs)||0)+t.bs;
-  if(accDestino) accDestino.bs=(n(accDestino.bs)||0)-(t.bs-t.comBs);
+  // Reverse inicioBs adjustment
+  const sOrigen=day.saldos.find(s=>s.cod===t.origen);
+  const sDestino=day.saldos.find(s=>s.cod===t.destino);
+  if(sOrigen) sOrigen.inicioBs=(n(sOrigen.inicioBs)||0)+t.bs;
+  if(sDestino) sDestino.inicioBs=(n(sDestino.inicioBs)||0)-(t.bs-t.comBs);
   day.traspasos.splice(idx,1);
   saveLocal();
   render();
