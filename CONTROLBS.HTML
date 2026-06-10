@@ -8,18 +8,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
 <title>Control Bs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ══ RESET & VARS ══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
---bg: #0e0e0e;
+--bg: #f0f2f5;
 --bg2: #161616;
 --bg3: #1f1f1f;
 --bg4: #282828;
 --border: #2e2e2e;
---text: #f0f0f0;
+--text: #1a1d23;
 --dim: #666666;
 --dim2: #999999;
 --cyan: #ff6b1a;
@@ -61,7 +61,7 @@ border-bottom:1px solid var(--border);
 }
 .sidebar-logo .logo-text{
 font-size:18px;font-weight:700;color:var(--cyan);letter-spacing:-0.5px;
-text-shadow:0 0 20px rgba(255,107,26,0.4);
+text-shadow:0 2px 4px rgba(232,89,12,.2);
 }
 .sidebar-logo .logo-sub{font-size:10px;color:var(--dim);margin-top:2px}
 .sync-badge{
@@ -69,7 +69,7 @@ display:flex;align-items:center;gap:5px;
 font-size:9px;color:var(--dim);margin-top:6px;
 }
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);transition:background .3s}
-.sync-dot.ok{background:var(--orange);box-shadow:0 0 6px rgba(255,107,26,.6)}
+.sync-dot.ok{background:var(--orange);box-shadow:0 0 6px rgba(232,89,12,.5)}
 .sync-dot.loading{background:var(--gold);animation:pulse 1s infinite}
 .sync-dot.error{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -99,7 +99,7 @@ font-size:11px;font-weight:500;border-radius:8px;
 transition:all .15s;text-align:left;width:100%;
 }
 .day-btn:hover{background:var(--bg3);color:var(--text)}
-.day-btn.active{background:rgba(255,107,26,.15);color:var(--orange);font-weight:600}
+.day-btn.active{background:rgba(232,89,12,.1);color:var(--orange);font-weight:700;border-radius:8px}
 .day-btn .day-num{
 font-family:var(--mono);font-size:10px;
 background:var(--bg4);padding:1px 5px;border-radius:4px;
@@ -142,9 +142,9 @@ font-weight:600;transition:all .15s;width:100%;
 }
 .ab-cyan{background:rgba(255,107,26,.15);color:var(--orange)}
 .ab-cyan:hover{background:rgba(255,107,26,.25)}
-.ab-blue{background:rgba(59,130,246,.15);color:var(--blue)}
+.ab-blue{background:rgba(59,130,246,.15);color:#2563eb}
 .ab-blue:hover{background:rgba(59,130,246,.25)}
-.ab-green{background:rgba(16,185,129,.15);color:var(--green)}
+.ab-green{background:rgba(16,185,129,.15);color:#16a34a}
 .ab-green:hover{background:rgba(16,185,129,.25)}
 .ab-red{background:rgba(244,63,94,.1);color:var(--red)}
 .ab-red:hover{background:rgba(244,63,94,.2)}
@@ -168,7 +168,7 @@ justify-content:space-between;border-bottom:1px solid var(--border);
 }
 .card-title{font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--dim2)}
 .card-title.t-cyan{color:var(--orange)}
-.card-title.t-green{color:var(--green)}
+.card-title.t-green{color:#16a34a}
 .card-title.t-blue{color:#7dd3fc}
 .card-title.t-gold{color:var(--gold)}
 .card-title.t-purple{color:var(--purple)}
@@ -191,7 +191,7 @@ border-top:1px solid var(--border);text-align:center;
 .td-l{text-align:left!important}
 .td-mono{font-family:var(--mono);font-size:11px}
 .td-cyan{color:var(--orange);font-family:var(--mono);font-size:11px;font-weight:600}
-.td-green{color:var(--green);font-family:var(--mono);font-size:11px}
+.td-green{color:#16a34a;font-family:var(--mono);font-size:11px}
 .td-blue{color:#7dd3fc;font-family:var(--mono);font-size:11px}
 .td-red{color:var(--red);font-family:var(--mono);font-size:11px}
 .td-dim{color:var(--dim2);font-family:var(--mono);font-size:11px}
@@ -253,9 +253,9 @@ border:1px solid var(--border);
 .res-item.venta{background:rgba(59,130,246,.05)}
 .res-label{font-size:9px;font-weight:700;color:var(--dim);letter-spacing:.6px;margin-bottom:4px}
 .res-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text)}
-.win .res-val{color:var(--green);font-size:15px}
+.win .res-val{color:#16a34a;font-size:15px}
 .loss .res-val{color:var(--red);font-size:15px}
-.compra .res-val{color:var(--green)}
+.compra .res-val{color:#16a34a}
 .venta .res-val{color:#7dd3fc}
 
 /* ══ MES KPIs ══════════════════════════════════════════════ */
@@ -266,7 +266,7 @@ border:1px solid var(--border);
 .kpi.k-cyan {background:rgba(34,211,238,.07);border-color:rgba(34,211,238,.25)}
 .kpi-label{font-size:9px;font-weight:700;color:var(--dim);letter-spacing:.7px;margin-bottom:5px}
 .kpi-val{font-family:var(--mono);font-size:15px;font-weight:700}
-.k-green .kpi-val{color:var(--green)}
+.k-green .kpi-val{color:#16a34a}
 .k-blue .kpi-val{color:#7dd3fc}
 .k-cyan .kpi-val{color:var(--cyan)}
 .kpi-sub{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
@@ -285,7 +285,7 @@ color:var(--text);padding:7px 12px;font-size:12px;outline:none;
 .fac-section-title{font-size:10px;font-weight:700;letter-spacing:.6px;
 padding:6px 0 4px;border-top:1px solid var(--border);margin-top:8px}
 .fac-section-title.t-blue{color:#7dd3fc}
-.fac-section-title.t-green{color:var(--green)}
+.fac-section-title.t-green{color:#16a34a}
 .fac-total-row{
 display:flex;justify-content:space-between;align-items:center;
 background:var(--bg3);border-radius:7px;padding:8px 12px;margin:8px 0;
@@ -324,10 +324,10 @@ padding:10px 14px;border:1px solid rgba(245,158,11,.2);
 .dp-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
 .dp-label{color:var(--dim)}
 .dp-val{font-family:var(--mono);font-weight:600}
-.dp-ganancia{color:var(--green);font-size:13px!important}
+.dp-ganancia{color:#16a34a;font-size:13px!important}
 .reg-btn{
 display:block;width:calc(100% - 28px);margin:0 14px 14px;
-padding:10px;background:linear-gradient(135deg,#d97706,#f59e0b);
+padding:10px;background:linear-gradient(135deg,#e8590c,#f97316);
 border:none;border-radius:8px;color:#000;font-weight:700;
 font-family:var(--font);font-size:13px;cursor:pointer;transition:all .15s;
 }
@@ -361,7 +361,7 @@ font-size:11px;outline:none;margin-bottom:12px}
 font-family:var(--font);font-size:12px;font-weight:600;transition:all .15s}
 .mbtn-cyan{background:var(--cyan);color:#000}
 .mbtn-ghost{background:var(--bg3);color:var(--dim2);border:1px solid var(--border)}
-.mbtn-green{background:rgba(16,185,129,.2);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.mbtn-green{background:rgba(16,185,129,.2);color:#16a34a;border:1px solid rgba(16,185,129,.3)}
 
 /* ══ TOAST ═════════════════════════════════════════════════ */
 .toast{
@@ -370,7 +370,7 @@ border:1px solid var(--border);border-radius:9px;padding:10px 16px;
 font-size:12px;z-index:300;transition:opacity .3s;max-width:260px;
 }
 .toast.hide{opacity:0;pointer-events:none}
-.toast.ok {border-color:var(--green);color:var(--green)}
+.toast.ok {border-color:#16a34a;color:#16a34a}
 .toast.err{border-color:var(--red);color:var(--red)}
 
 .mob-totals{display:none}
@@ -394,7 +394,7 @@ padding:6px 4px;background:transparent;border:none;cursor:pointer;
 color:var(--dim);font-family:var(--font);font-size:9px;font-weight:600;
 border-radius:8px;transition:all .15s;
 }
-.mob-btn.active{color:var(--orange);background:rgba(255,107,26,.1)}
+.mob-btn.active{color:var(--orange);background:rgba(232,89,12,.08)}
 .mob-btn .mob-icon{font-size:16px}
 #content{padding-bottom:130px}
 #mob-day-bar{
@@ -445,6 +445,41 @@ tbody tr{height:44px}
 .card-header{padding:12px 14px}
 .card-title{font-size:13px}
 }
+
+/* ══ FORCED LIGHT THEME ════════════════════════════════════ */
+:root {
+  --bg:      #f0f2f5 !important;
+  --bg2:     #ffffff !important;
+  --bg3:     #f8f9fb !important;
+  --bg4:     #e8eaed !important;
+  --border:  #e2e6ea !important;
+  --text:    #1a1d23 !important;
+  --dim:     #6b7280 !important;
+  --dim2:    #9ca3af !important;
+}
+html, body { background:#f0f2f5 !important; color:#111827 !important; }
+.card { background:#ffffff !important; border-color:#e2e6ea !important; box-shadow:0 1px 6px rgba(0,0,0,.08) !important; }
+#sidebar { background:#ffffff !important; border-color:#e2e6ea !important; }
+.ni, .ti, .ni-fmt { background:#f1f3f5 !important; color:#111827 !important; border-color:#d1d5db !important; font-weight:600 !important; }
+thead { background:#f8f9fb !important; }
+thead th { color:#374151 !important; font-weight:700 !important; }
+tbody tr td { color:#111827 !important; font-weight:500 !important; }
+tbody tr:hover { background:#f8f9fb !important; }
+.sidebar-section-title { color:#6b7280 !important; font-weight:700 !important; }
+.day-btn { color:#111827 !important; font-weight:600 !important; }
+.day-btn.active { background:rgba(232,89,12,.1) !important; color:#e8590c !important; font-weight:700 !important; }
+.action-btn { background:#f1f3f5 !important; color:#111827 !important; border-color:#e2e6ea !important; font-weight:600 !important; }
+.card-header { background:#f8f9fb !important; border-color:#e2e6ea !important; }
+.card-title { font-weight:800 !important; }
+.res-item { background:#f8f9fb !important; border-color:#e2e6ea !important; }
+.res-label { color:#374151 !important; font-weight:700 !important; }
+.res-val { color:#111827 !important; font-weight:700 !important; }
+.td-dim { color:#374151 !important; font-weight:600 !important; }
+.td-l { color:#111827 !important; font-weight:600 !important; }
+select { background:#f1f3f5 !important; color:#111827 !important; font-weight:600 !important; }
+.logo-text { color:#e8590c !important; }
+.logo-sub { color:#6b7280 !important; font-weight:600 !important; }
+.sync-text { color:#374151 !important; font-weight:600 !important; }
 </style>
 </head>
 <body>
@@ -574,7 +609,6 @@ let currentView = "dia";
 let cuentaFiltro = { ventas: "", compras: "" };
 let clienteFiltro = "";
 let directoData = {cliente:"",proveedor:"",codProv:"DR",bs:"",tasaVenta:"",tasaCompra:""};
-let traspasoData = {origen:"",destino:"",bs:"",comision:""};
 let syncTimer = null;
 let toastTimer = null;
 
@@ -615,17 +649,14 @@ return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart
 
 // ══ CALCULATIONS ═══════════════════════════════════════════
 function calcStock(s,ventas,compras){
-const c=compras.filter(x=>x.cod===s.cod&&x.cod!=="DR"&&!x._trasId).reduce((a,x)=>a+n(x.bs),0);
-const v=ventas.filter(x=>x.cod===s.cod&&x.cod!=="DR"&&!x._trasId).reduce((a,x)=>a+n(x.bs),0);
-// Add traspaso net effect: compras to this account minus ventas from this account
-const trasC=compras.filter(x=>x._trasId&&x.cod===s.cod).reduce((a,x)=>a+n(x.bs),0);
-const trasV=ventas.filter(x=>x._trasId&&x.cod===s.cod).reduce((a,x)=>a+n(x.bs),0);
-return n(s.inicioBs)+c-v+trasC-trasV;
+const c=compras.filter(x=>x.cod===s.cod&&x.cod!=="DR").reduce((a,x)=>a+n(x.bs),0);
+const v=ventas.filter(x=>x.cod===s.cod&&x.cod!=="DR").reduce((a,x)=>a+n(x.bs),0);
+return n(s.inicioBs)+c-v;
 }
 function calcPromCompraReal(day){
 const totInicio=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
 const promInicio=n(day.saldos[0]?.promedio);
-const comprasReales=day.compras.filter(c=>c.cod!=="DR"&&!c._trasId);
+const comprasReales=day.compras.filter(c=>c.cod!=="DR");
 const sumBsC=comprasReales.reduce((a,c)=>a+n(c.bs),0);
 const sumCopC=comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
 const denom=totInicio+sumBsC;
@@ -635,8 +666,8 @@ function calcResumen(day){
 const inicioBs=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
 const promInicio=n(day.saldos[0]?.promedio);
 const inicioPesos=inicioBs*promInicio;
-const comprasReales=day.compras.filter(c=>c.cod!=="DR"&&!c._trasId);
-const ventasReales=day.ventas.filter(v=>v.cod!=="DR"&&!v._trasId);
+const comprasReales=day.compras.filter(c=>c.cod!=="DR");
+const ventasReales=day.ventas.filter(v=>v.cod!=="DR");
 const comprasDirectas=day.compras.filter(c=>c.cod==="DR");
 const ventasDirectas=day.ventas.filter(v=>v.cod==="DR");
 const bsComp=comprasReales.reduce((a,c)=>a+n(c.bs),0);
@@ -988,7 +1019,42 @@ ${renderMovHTML(day,"ventas")}
 ${renderMovHTML(day,"compras")}
 </div>
 ${renderDirectoHTML()}
-${renderTraspasoHTML()}
+
+${(()=>{
+  const accs = state.accounts.filter(a=>a.cod!=='DR');
+  const opts = accs.map(a=>`<option value="${a.cod}">${a.cod} — ${a.nombre}</option>`).join('');
+  const res = calcResumen(day);
+  const tasa = res.promCompra || 0;
+  return `<div class="card">
+<div class="card-header"><span class="card-title" style="color:#a78bfa">🔁 TRASPASO INTERNO</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px">
+  <div>
+    <div style="font-size:9px;color:var(--dim);font-weight:700;margin-bottom:4px">ORIGEN (sale)</div>
+    <select id="tr-origen" class="ni" style="width:100%;padding:8px">
+      <option value="">Seleccionar...</option>${opts}
+    </select>
+  </div>
+  <div>
+    <div style="font-size:9px;color:var(--dim);font-weight:700;margin-bottom:4px">DESTINO (entra)</div>
+    <select id="tr-destino" class="ni" style="width:100%;padding:8px">
+      <option value="">Seleccionar...</option>${opts}
+    </select>
+  </div>
+  <div>
+    <div style="font-size:9px;color:var(--dim);font-weight:700;margin-bottom:4px">MONTO Bs</div>
+    <input id="tr-bs" class="ni-fmt" inputmode="decimal" placeholder="0,00" style="width:100%"
+      onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/>
+  </div>
+  <div>
+    <div style="font-size:9px;color:var(--dim);font-weight:700;margin-bottom:4px">COMISIÓN % <span style="color:var(--dim2)">(opcional)</span></div>
+    <input id="tr-com" class="ni-fmt" inputmode="decimal" placeholder="ej: 0.3" style="width:100%"/>
+  </div>
+</div>
+${tasa>0?`<div style="padding:0 12px 8px;font-size:10px;color:var(--dim2)">📊 Tasa promedio del día: <b style="color:var(--cyan)">${fmt(tasa,4)}</b></div>`:''}
+<button class="add-row-btn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;margin:4px 12px 12px;width:calc(100% - 24px)"
+  onclick="ejecutarTraspasoSimple()">🔁 Registrar Traspaso</button>
+</div>`;
+})()}
 ${renderResumenHTML(day)}
 ${renderClienteHTML()}
 `;
@@ -1081,7 +1147,7 @@ if(cuentasUsadas.length>1){
   filterBtns+=`</div>`;
 }
 
-const visibleRows = rows.map((r,i)=>({...r,_i:i})).filter(r=>!r._trasId&&(filtro?r.cod===filtro:true));
+const visibleRows = rows.map((r,i)=>({...r,_i:i})).filter(r=>filtro?r.cod===filtro:true);
 const totBs=visibleRows.reduce((a,r)=>a+n(r.bs),0);
 const totCop=visibleRows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
 let trows="";
@@ -1093,7 +1159,7 @@ const comVal = isV&&r.comision ? n(r.comision) : 0;
 const comBs = comVal>0 ? n(r.bs)*comVal/100 : 0;
 const comCop = comBs>0 ? comBs*n(r.tasa) : 0;
 const comExpanded = isV&&r._comExpanded ? 'block' : 'none';
-trows+=`<tr id="mov-row-${tipo}-${i}" style="opacity:${r.done?'.5':'1'}">
+trows+=`<tr id="mov-row-${tipo}-${i}" style="opacity:${r.done?'.5':'1'};${r._traspaso?'background:rgba(167,139,250,.06);border-left:2px solid rgba(167,139,250,.4)':''}">
 <td><button class="del-btn" id="chk-${tipo}-${i}" onclick="toggleDone('${tipo}',${i})">${r.done?"✅":"☐"}</button></td>
 <td style="min-width:130px"><input class="ti" value="${r.nombre}" placeholder="Nombre"
 style="min-width:120px"
@@ -1259,7 +1325,7 @@ filtC.forEach((c,i)=>{const cop=n(c.bs)*n(c.tasa);rows+=`<tr><td>${i+1}</td><td 
 cs=`<div class="fac-section-title t-green">📥 COMPRAS — Lo que le debo</div>
 <table><thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>COP</th><th>CUENTA</th></tr></thead><tbody>${rows}</tbody></table>
 <div class="fac-total-row"><div><div style="font-size:9px;color:var(--dim)">TOTAL Bs</div><div class="td-green" style="font-family:var(--mono);font-weight:700">${fmt(tCBs,2)}</div></div>
-<div style="text-align:right"><div style="font-size:9px;color:var(--dim)">TOTAL COP</div><div style="font-family:var(--mono);font-weight:700;color:var(--green)">${fmtCOP(tCCop)}</div></div></div>`;
+<div style="text-align:right"><div style="font-size:9px;color:var(--dim)">TOTAL COP</div><div style="font-family:var(--mono);font-weight:700;color:#16a34a">${fmtCOP(tCCop)}</div></div></div>`;
 }
 if(filtV.length>0&&filtC.length>0){
 const nBS=tVBs-tCBs,nCOP=tVCop-tCCop;
@@ -1319,7 +1385,7 @@ cs=`<div class="fac-section-title t-green">📥 COMPRAS — Lo que le debo</div>
 <table><thead><tr><th>#</th><th>Bs</th><th>TASA</th><th>COP</th><th>CUENTA</th></tr></thead><tbody>${rows}</tbody></table>
 <div class="fac-total-row">
 <div><div style="font-size:9px;color:var(--dim)">TOTAL Bs</div><div class="td-green" style="font-family:var(--mono);font-weight:700">${fmt(tCBs,2)}</div></div>
-<div style="text-align:right"><div style="font-size:9px;color:var(--dim)">TOTAL COP</div><div style="font-family:var(--mono);font-weight:700;color:var(--green)">${fmtCOP(tCCop)}</div></div>
+<div style="text-align:right"><div style="font-size:9px;color:var(--dim)">TOTAL COP</div><div style="font-family:var(--mono);font-weight:700;color:#16a34a">${fmtCOP(tCCop)}</div></div>
 </div>`;
 }
 if(filtV.length>0&&filtC.length>0){
@@ -1438,7 +1504,7 @@ return `<div class="kpi-row">
 <div class="kpi k-green"><div class="kpi-label">UTILIDAD TOTAL</div><div class="kpi-val">${fmtCOP(totU)}</div></div>
 <div class="kpi k-blue"><div class="kpi-label">Bs VENDIDOS</div><div class="kpi-val">${fmt(totBV,2)}</div><div class="kpi-sub">${fmtCOP(totCV)}</div></div>
 <div class="kpi k-cyan"><div class="kpi-label">Bs COMPRADOS</div><div class="kpi-val">${fmt(totBC,2)}</div><div class="kpi-sub">${fmtCOP(totCC)}</div></div>
-<div class="kpi"><div class="kpi-label">PROM COMPRA</div><div class="kpi-val" style="color:var(--green)">${fmt(avgPC,4)}</div>
+<div class="kpi"><div class="kpi-label">PROM COMPRA</div><div class="kpi-val" style="color:#16a34a">${fmt(avgPC,4)}</div>
 <div class="kpi-label" style="margin-top:8px">PROM VENTA</div><div class="kpi-val" style="color:#7dd3fc">${fmt(avgPV,4)}</div></div>
 <div class="kpi"><div class="kpi-label">QUEDA EN Bs</div><div class="kpi-val" style="color:var(--cyan)">${fmt(last.quedaBs,2)}</div>
 <div class="kpi-label" style="margin-top:8px">VALOR PESOS</div><div class="kpi-val" style="color:var(--cyan)">${fmtCOP(last.valorPesos)}</div></div>
@@ -1613,6 +1679,191 @@ function copiarParaExcel(nombre){
     document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
     showToast('✅ Copiado y marcado');
   });
+}
+
+// ══ TRASPASO SIMPLE ═════════════════════════════════════════
+function ejecutarTraspasoSimple(){
+  const origen = document.getElementById('tr-origen').value;
+  const destino = document.getElementById('tr-destino').value;
+  const bs = rawNum(document.getElementById('tr-bs').value)||0;
+  const com = rawNum(document.getElementById('tr-com').value)||0;
+
+  if(!origen){showToast('Selecciona cuenta origen','err');return;}
+  if(!destino){showToast('Selecciona cuenta destino','err');return;}
+  if(origen===destino){showToast('Origen y destino iguales','err');return;}
+  if(!bs||bs<=0){showToast('Ingresa el monto en Bs','err');return;}
+
+  const day = state.days[state.currentDay];
+  const res = calcResumen(day);
+  const tasa = res.promCompra || 0;
+  const comBs = bs * com / 100;
+  const bsNeto = bs - comBs;
+
+  // Add as regular venta (from origen) and compra (to destino)
+  // Tasa=0 so it doesn't affect COP calculations / promedio
+  day.ventas.push({
+    nombre:'TRASPASO → '+destino,
+    cod: origen,
+    tasa: 0,
+    bs: bs + comBs,  // origen loses bs + commission
+    done: false,
+    _traspaso: true
+  });
+  day.compras.push({
+    nombre:'TRASPASO ← '+origen,
+    cod: destino,
+    tasa: 0,
+    bs: bsNeto,  // destino receives only net bs
+    done: false,
+    _traspaso: true
+  });
+
+  saveLocal();
+  if(state.scriptUrl) syncSave();
+
+  // Clear form
+  document.getElementById('tr-bs').value='';
+  document.getElementById('tr-com').value='';
+  document.getElementById('tr-origen').value='';
+  document.getElementById('tr-destino').value='';
+
+  render();
+  showToast('✅ Traspaso registrado','ok');
+}
+// ══ EXPORTAR CLIENTE A EXCEL ════════════════════════════════
+function exportClienteExcel(nombre){
+  const day = state.days[state.currentDay];
+  const filtV = day.ventas.filter(v=>v.nombre&&v.nombre.toLowerCase()===nombre.toLowerCase()&&n(v.bs)>0);
+  const filtC = day.compras.filter(c=>c.nombre&&c.nombre.toLowerCase()===nombre.toLowerCase()&&n(c.bs)>0);
+
+  const wb = XLSX.utils.book_new();
+  const rows = [];
+
+  // Header
+  rows.push([nombre.toUpperCase(), '', '', '', '', '']);
+  rows.push(['Fecha:', day.label, '', '', '', '']);
+  rows.push(['']);
+  rows.push(['DESCRIPCION', 'MONTO Bs', 'TASA', 'TOTAL PESOS', 'CUENTA', '']);
+
+  let totalVBs=0, totalVCop=0;
+  if(filtV.length>0){
+    rows.push(['── VENTAS (Lo que me debe) ──', '', '', '', '', '']);
+    filtV.forEach((v,i)=>{
+      const cop = n(v.bs)*n(v.tasa);
+      totalVBs += n(v.bs); totalVCop += cop;
+      const cuenta = state.accounts.find(a=>a.cod===v.cod)?.nombre||v.cod||'—';
+      rows.push([`Venta ${i+1}`, n(v.bs), n(v.tasa), cop, cuenta, '']);
+    });
+    rows.push(['TOTAL VENTAS', totalVBs, '', totalVCop, '', '']);
+    rows.push(['']);
+  }
+
+  let totalCBs=0, totalCCop=0;
+  if(filtC.length>0){
+    rows.push(['── COMPRAS (Lo que le debo) ──', '', '', '', '', '']);
+    filtC.forEach((c,i)=>{
+      const cop = n(c.bs)*n(c.tasa);
+      totalCBs += n(c.bs); totalCCop += cop;
+      const cuenta = state.accounts.find(a=>a.cod===c.cod)?.nombre||c.cod||'—';
+      rows.push([`Compra ${i+1}`, n(c.bs), n(c.tasa), cop, cuenta, '']);
+    });
+    rows.push(['TOTAL COMPRAS', totalCBs, '', totalCCop, '', '']);
+    rows.push(['']);
+  }
+
+  if(filtV.length>0 && filtC.length>0){
+    const netoBs = totalVBs - totalCBs;
+    const netoCop = totalVCop - totalCCop;
+    rows.push([netoBs>=0?'ME DEBE (Bs)':'LE DEBO (Bs)', Math.abs(netoBs), '', '', '', '']);
+    rows.push([netoCop>=0?'ME DEBE (COP)':'LE DEBO (COP)', '', '', Math.abs(netoCop), '', '']);
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Column widths
+  ws['!cols'] = [{wch:28},{wch:16},{wch:10},{wch:18},{wch:20},{wch:5}];
+
+  // Style header row
+  const range = XLSX.utils.decode_range(ws['!ref']);
+
+  // Format number cells
+  for(let R=4; R<=range.e.r; R++){
+    const bCell = XLSX.utils.encode_cell({r:R, c:1});
+    const cCell = XLSX.utils.encode_cell({r:R, c:3});
+    if(ws[bCell] && typeof ws[bCell].v === 'number'){
+      ws[bCell].z = '#,##0.00';
+    }
+    if(ws[cCell] && typeof ws[cCell].v === 'number'){
+      ws[cCell].z = '"$"#,##0';
+    }
+  }
+
+  const sheetName = nombre.replace(/[\/\\?*\[\]:]/g,'-').slice(0,31);
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+  try{
+    XLSX.writeFile(wb, `${nombre}_${day.label.replace(/\//g,'-')}.xlsx`);
+  }catch(e){
+    const wbout = XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob = new Blob([wbout],{type:'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`${nombre}_${day.label.replace(/\//g,'-')}.xlsx`;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+  }
+}
+
+
+
+// ══ TRASPASO SIMPLE ═════════════════════════════════════════
+function ejecutarTraspasoSimple(){
+  const origen = document.getElementById('tr-origen').value;
+  const destino = document.getElementById('tr-destino').value;
+  const bs = rawNum(document.getElementById('tr-bs').value)||0;
+  const com = rawNum(document.getElementById('tr-com').value)||0;
+
+  if(!origen){showToast('Selecciona cuenta origen','err');return;}
+  if(!destino){showToast('Selecciona cuenta destino','err');return;}
+  if(origen===destino){showToast('Origen y destino iguales','err');return;}
+  if(!bs||bs<=0){showToast('Ingresa el monto en Bs','err');return;}
+
+  const day = state.days[state.currentDay];
+  const res = calcResumen(day);
+  const tasa = res.promCompra || 0;
+  const comBs = bs * com / 100;
+  const bsNeto = bs - comBs;
+
+  // Add as regular venta (from origen) and compra (to destino)
+  // Tasa=0 so it doesn't affect COP calculations / promedio
+  day.ventas.push({
+    nombre:'TRASPASO → '+destino,
+    cod: origen,
+    tasa: 0,
+    bs: bs + comBs,  // origen loses bs + commission
+    done: false,
+    _traspaso: true
+  });
+  day.compras.push({
+    nombre:'TRASPASO ← '+origen,
+    cod: destino,
+    tasa: 0,
+    bs: bsNeto,  // destino receives only net bs
+    done: false,
+    _traspaso: true
+  });
+
+  saveLocal();
+  if(state.scriptUrl) syncSave();
+
+  // Clear form
+  document.getElementById('tr-bs').value='';
+  document.getElementById('tr-com').value='';
+  document.getElementById('tr-origen').value='';
+  document.getElementById('tr-destino').value='';
+
+  render();
+  showToast('✅ Traspaso registrado','ok');
 }
 // ══ EXPORTAR CLIENTE A EXCEL ════════════════════════════════
 function exportClienteExcel(nombre){
