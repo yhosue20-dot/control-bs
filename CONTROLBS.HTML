@@ -622,7 +622,7 @@ return n(s.inicioBs)+c-v;
 function calcPromCompraReal(day){
 const totInicio=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
 const promInicio=n(day.saldos[0]?.promedio);
-const comprasReales=day.compras.filter(c=>c.cod!=="DR");
+const comprasReales=day.compras.filter(c=>c.cod!=="DR"&&!c._trasId);
 const sumBsC=comprasReales.reduce((a,c)=>a+n(c.bs),0);
 const sumCopC=comprasReales.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0);
 const denom=totInicio+sumBsC;
@@ -632,8 +632,8 @@ function calcResumen(day){
 const inicioBs=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
 const promInicio=n(day.saldos[0]?.promedio);
 const inicioPesos=inicioBs*promInicio;
-const comprasReales=day.compras.filter(c=>c.cod!=="DR");
-const ventasReales=day.ventas.filter(v=>v.cod!=="DR");
+const comprasReales=day.compras.filter(c=>c.cod!=="DR"&&!c._trasId);
+const ventasReales=day.ventas.filter(v=>v.cod!=="DR"&&!v._trasId);
 const comprasDirectas=day.compras.filter(c=>c.cod==="DR");
 const ventasDirectas=day.ventas.filter(v=>v.cod==="DR");
 const bsComp=comprasReales.reduce((a,c)=>a+n(c.bs),0);
@@ -1059,7 +1059,7 @@ if(cuentasUsadas.length>1){
   filterBtns+=`</div>`;
 }
 
-const visibleRows = filtro ? rows.map((r,i)=>({...r,_i:i})).filter(r=>r.cod===filtro) : rows.map((r,i)=>({...r,_i:i}));
+const visibleRows = rows.map((r,i)=>({...r,_i:i})).filter(r=>!r._trasId&&(filtro?r.cod===filtro:true));
 const totBs=visibleRows.reduce((a,r)=>a+n(r.bs),0);
 const totCop=visibleRows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
 let trows="";
@@ -1716,24 +1716,21 @@ function ejecutarTraspaso(){
   if(!bs||bs<=0){showToast('Ingresa el monto en Bs','err');return;}
 
   const day = state.days[state.currentDay];
-  const sOrigen = day.saldos.find(s=>s.cod===origen);
-  const sDestino = day.saldos.find(s=>s.cod===destino);
-  if(!sOrigen||!sDestino){showToast('Cuenta no encontrada en saldos','err');return;}
-
   const comBs = bs * com / 100;
   const bsNeto = bs - comBs;
-
-  // Adjust inicioBs directly — this moves Bs between accounts without touching promedios
-  sOrigen.inicioBs = (n(sOrigen.inicioBs)||0) - bs;
-  sDestino.inicioBs = (n(sDestino.inicioBs)||0) + bsNeto;
-
-  // Log the traspaso
-  if(!day.traspasos) day.traspasos=[];
   const res = calcResumen(day);
   const tasa = res.promCompra || 0;
+
+  // Use internal venta/compra with code TR_ so calcStock moves the stock
+  // without affecting promedio (tasa=0 so no COP impact)
+  const trasId = 'TR_'+ Date.now();
+  day.ventas.push({nombre:'[TRASPASO→'+destino+']', cod:origen, tasa:0, bs:bs, done:false, _trasId:trasId});
+  day.compras.push({nombre:'[TRASPASO←'+origen+']', cod:destino, tasa:0, bs:bsNeto, done:false, _trasId:trasId});
+
+  if(!day.traspasos) day.traspasos=[];
   day.traspasos.push({
     origen, destino, bs, comision:com, comBs,
-    comCop: comBs*tasa, tasa, fecha: day.label
+    comCop: comBs*tasa, tasa, trasId, fecha: day.label
   });
 
   saveLocal();
@@ -1803,11 +1800,9 @@ function delTraspaso(idx){
   const day=state.days[state.currentDay];
   if(!day.traspasos) return;
   const t=day.traspasos[idx];
-  // Reverse inicioBs adjustment
-  const sOrigen=day.saldos.find(s=>s.cod===t.origen);
-  const sDestino=day.saldos.find(s=>s.cod===t.destino);
-  if(sOrigen) sOrigen.inicioBs=(n(sOrigen.inicioBs)||0)+t.bs;
-  if(sDestino) sDestino.inicioBs=(n(sDestino.inicioBs)||0)-(t.bs-t.comBs);
+  // Remove the internal venta/compra rows by trasId
+  day.ventas = day.ventas.filter(v=>v._trasId!==t.trasId);
+  day.compras = day.compras.filter(c=>c._trasId!==t.trasId);
   day.traspasos.splice(idx,1);
   saveLocal();
   render();
