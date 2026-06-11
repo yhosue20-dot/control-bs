@@ -580,6 +580,21 @@ tfoot td { background:linear-gradient(135deg,#eef2ff,#f5f3ff) !important; color:
 .acc-DR { background:#f3f4f6 !important; color:#6b7280 !important; }
 .td-stock-pos { background:rgba(22,163,74,.1) !important; color:#15803d !important; font-weight:700 !important; border-radius:5px; padding:1px 5px; }
 .td-stock-neg { background:rgba(220,38,38,.1) !important; color:#dc2626 !important; font-weight:700 !important; border-radius:5px; padding:1px 5px; }
+
+/* ══ VIBRANT ROW COLORS VENTAS/COMPRAS ═══════════════════ */
+.acc-row-VY { background:linear-gradient(135deg,rgba(219,234,254,.4),rgba(219,234,254,.15)) !important; border-left:3px solid #3b82f6 !important; }
+.acc-row-BY { background:linear-gradient(135deg,rgba(220,252,231,.4),rgba(220,252,231,.15)) !important; border-left:3px solid #22c55e !important; }
+.acc-row-PH { background:linear-gradient(135deg,rgba(237,233,254,.4),rgba(237,233,254,.15)) !important; border-left:3px solid #8b5cf6 !important; }
+.acc-row-BD { background:linear-gradient(135deg,rgba(252,231,243,.4),rgba(252,231,243,.15)) !important; border-left:3px solid #ec4899 !important; }
+.acc-row-VP { background:linear-gradient(135deg,rgba(255,237,213,.4),rgba(255,237,213,.15)) !important; border-left:3px solid #f97316 !important; }
+.acc-row-VM { background:linear-gradient(135deg,rgba(254,249,195,.4),rgba(254,249,195,.15)) !important; border-left:3px solid #eab308 !important; }
+.acc-row-PP { background:linear-gradient(135deg,rgba(240,249,255,.4),rgba(240,249,255,.15)) !important; border-left:3px solid #0ea5e9 !important; }
+.acc-row-BP { background:linear-gradient(135deg,rgba(245,243,255,.4),rgba(245,243,255,.15)) !important; border-left:3px solid #7c3aed !important; }
+.acc-row-BNC { background:linear-gradient(135deg,rgba(239,246,255,.4),rgba(239,246,255,.15)) !important; border-left:3px solid #1d4ed8 !important; }
+.acc-row-T1,.acc-row-T2 { background:linear-gradient(135deg,rgba(236,253,245,.4),rgba(236,253,245,.15)) !important; border-left:3px solid #10b981 !important; }
+.acc-row-EN { background:linear-gradient(135deg,rgba(253,242,248,.4),rgba(253,242,248,.15)) !important; border-left:3px solid #db2777 !important; }
+.acc-row-BT { background:linear-gradient(135deg,rgba(255,247,237,.4),rgba(255,247,237,.15)) !important; border-left:3px solid #ea580c !important; }
+.acc-row-DR { background:rgba(249,250,251,.3) !important; border-left:3px solid #94a3b8 !important; }
 </style>
 </head>
 <body>
@@ -897,8 +912,10 @@ if(!row) return;
 row.querySelector(".s-pesos").textContent=fmt(pesos,0);
 row.querySelector(".s-compra").textContent=fmt(compra,2);
 row.querySelector(".s-venta").textContent=fmt(venta,2);
-const st=row.querySelector(".s-stock");
-st.textContent=fmt(stock,2); st.className="s-stock td-cyan"+(stock<0?" neg":"");
+const stCell=row.querySelector(".s-stock");
+const stSpan=row.querySelector(".td-stock-pos, .td-stock-neg");
+if(stSpan){ stSpan.textContent=fmt(stock,2); stSpan.className=stock<0?'td-stock-neg':'td-stock-pos'; }
+else if(stCell){ stCell.textContent=fmt(stock,2); stCell.className="s-stock td-cyan"+(stock<0?" neg":""); }
 });
 const totI=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
 const totP=day.saldos.reduce((a,s)=>a+n(s.inicioBs)*n(s.promedio),0);
@@ -933,7 +950,7 @@ const copFmt=copVal?fmt(copVal,0):"";
 copEl.textContent=copFmt;
 if(copMob) copMob.textContent=copVal?"= "+fmtCOP(copVal):"";
 }
-saveLocal(); syncSave(); renderMovTotals(tipo); renderResumenBlock(); updateSaldoCalcs();
+saveLocal(); renderMovTotals(tipo); renderResumenBlock(); updateSaldoCalcs();
 }
 function renderMovTotals(tipo){
 const day=state.days[state.currentDay];
