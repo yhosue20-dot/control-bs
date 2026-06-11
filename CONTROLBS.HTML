@@ -532,13 +532,61 @@ tfoot td { background:linear-gradient(135deg,#eef2ff,#f5f3ff) !important; color:
 
 /* Register DR button */
 [onclick*="registrarDirecto"], [onclick*="Registrar"] { color:#fff !important; }
+
+#sidebar { position:relative; transition:width .25s ease, min-width .25s ease; overflow:hidden; }
+#sidebar.collapsed { width:42px !important; min-width:42px !important; }
+#sidebar.collapsed .sidebar-section-title,
+#sidebar.collapsed .day-item,
+#sidebar.collapsed .day-label-inp,
+#sidebar.collapsed .logo-sub,
+#sidebar.collapsed .sync-badge,
+#sidebar.collapsed .action-btn { display:none !important; }
+#sidebar.collapsed .logo-text { font-size:10px !important; }
+#collapse-btn {
+  position:absolute; top:8px; right:-13px; z-index:200;
+  width:26px; height:26px; border-radius:50%;
+  background:#312e81; border:1px solid #4f46e5;
+  color:#a5b4fc; cursor:pointer; font-size:12px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 8px rgba(99,102,241,.3);
+  transition:all .2s;
+}
+
+.acc-badge { display:inline-block; padding:2px 7px; border-radius:7px; font-size:10px; font-weight:800; }
+.acc-VY,.acc-row-VY td { background:rgba(219,234,254,.3) !important; }
+.acc-VY { background:#dbeafe !important; color:#1d4ed8 !important; }
+.acc-BY,.acc-row-BY td { background:rgba(220,252,231,.3) !important; }
+.acc-BY { background:#dcfce7 !important; color:#15803d !important; }
+.acc-PH,.acc-row-PH td { background:rgba(237,233,254,.3) !important; }
+.acc-PH { background:#ede9fe !important; color:#7c3aed !important; }
+.acc-BD,.acc-row-BD td { background:rgba(252,231,243,.3) !important; }
+.acc-BD { background:#fce7f3 !important; color:#be185d !important; }
+.acc-VP,.acc-row-VP td { background:rgba(255,237,213,.3) !important; }
+.acc-VP { background:#ffedd5 !important; color:#c2410c !important; }
+.acc-VM,.acc-row-VM td { background:rgba(254,249,195,.3) !important; }
+.acc-VM { background:#fef9c3 !important; color:#854d0e !important; }
+.acc-PP,.acc-row-PP td { background:rgba(240,249,255,.3) !important; }
+.acc-PP { background:#f0f9ff !important; color:#0369a1 !important; }
+.acc-BP,.acc-row-BP td { background:rgba(245,243,255,.3) !important; }
+.acc-BP { background:#f5f3ff !important; color:#6d28d9 !important; }
+.acc-BNC,.acc-row-BNC td { background:rgba(239,246,255,.3) !important; }
+.acc-BNC { background:#eff6ff !important; color:#1e40af !important; }
+.acc-T1,.acc-row-T1 td,.acc-T2,.acc-row-T2 td { background:rgba(236,253,245,.3) !important; }
+.acc-T1,.acc-T2 { background:#ecfdf5 !important; color:#065f46 !important; }
+.acc-EN,.acc-row-EN td { background:rgba(253,242,248,.3) !important; }
+.acc-EN { background:#fdf2f8 !important; color:#9d174d !important; }
+.acc-BT,.acc-row-BT td { background:rgba(255,247,237,.3) !important; }
+.acc-BT { background:#fff7ed !important; color:#c2410c !important; }
+.acc-DR { background:#f3f4f6 !important; color:#6b7280 !important; }
+.td-stock-pos { background:rgba(22,163,74,.1) !important; color:#15803d !important; font-weight:700 !important; border-radius:5px; padding:1px 5px; }
+.td-stock-neg { background:rgba(220,38,38,.1) !important; color:#dc2626 !important; font-weight:700 !important; border-radius:5px; padding:1px 5px; }
 </style>
 </head>
 <body>
 <div id="app">
 
 <!-- ══ SIDEBAR ══ -->
-<div id="sidebar">
+<div id="sidebar"><button id="collapse-btn" onclick="toggleSidebar()">◀</button>
 <div class="sidebar-logo">
 <div class="logo-text">₿s Control</div>
 <div class="logo-sub">Control de Bolívares</div>
@@ -1020,7 +1068,11 @@ const btn=document.createElement("button");
 btn.className="day-btn"+(i===state.currentDay?" active":"");
 btn.innerHTML=`<span>${d.label||`Día ${String(i+1).padStart(2,"0")}`}</span><span class="day-num">${String(i+1).padStart(2,"0")}</span>`;
 btn.onclick=()=>setCurrentDay(i);
-wrap.appendChild(btn);
+const delD=document.createElement('button');
+delD.className='del-btn';delD.textContent='×';delD.title='Eliminar día';
+delD.style.cssText='font-size:12px;padding:1px 6px;opacity:.5;float:right;margin-top:3px';
+delD.onclick=(e)=>{e.stopPropagation();deleteDay(i);};
+wrap.appendChild(btn);wrap.appendChild(delD);
 if(i===state.currentDay){
 const inp=document.createElement("input");
 inp.className="day-label-inp"; inp.value=d.label||""; inp.placeholder="Nombre o fecha";
@@ -1048,6 +1100,25 @@ ${renderMovHTML(day,"ventas")}
 ${renderMovHTML(day,"compras")}
 </div>
 ${renderDirectoHTML()}
+${(()=>{
+  const accs=state.accounts.filter(a=>a.cod!=='DR');
+  const opts=accs.map(a=>`<option value="${a.cod}">${a.cod} — ${a.nombre}</option>`).join('');
+  return `<div class="card">
+<div class="card-header"><span class="card-title" style="color:#7c3aed">🔁 TRASPASO INTERNO</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px">
+  <div><div style="font-size:9px;color:#475569;font-weight:700;margin-bottom:4px">ORIGEN (sale)</div>
+  <select id="tr-origen" class="ni" style="width:100%;padding:8px"><option value="">Seleccionar...</option>${opts}</select></div>
+  <div><div style="font-size:9px;color:#475569;font-weight:700;margin-bottom:4px">DESTINO (entra)</div>
+  <select id="tr-destino" class="ni" style="width:100%;padding:8px"><option value="">Seleccionar...</option>${opts}</select></div>
+  <div><div style="font-size:9px;color:#475569;font-weight:700;margin-bottom:4px">MONTO Bs</div>
+  <input id="tr-bs" class="ni-fmt" inputmode="decimal" placeholder="0,00" style="width:100%"
+  onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumFractionDigits:0,maximumFractionDigits:2}):''"/></div>
+  <div><div style="font-size:9px;color:#475569;font-weight:700;margin-bottom:4px">COMISIÓN % <span style="color:#94a3b8">(opcional)</span></div>
+  <input id="tr-com" class="ni-fmt" inputmode="decimal" placeholder="ej: 0.3" style="width:100%"/></div>
+</div>
+<button class="add-row-btn" style="margin:4px 12px 12px;width:calc(100% - 24px)" onclick="ejecutarTraspasoSimple()">🔁 Registrar Traspaso</button>
+</div>`;
+})()}
 ${renderResumenHTML(day)}
 ${renderClienteHTML()}
 `;
@@ -1070,9 +1141,10 @@ const pesos=n(s.inicioBs)*prom;
 const compra=day.compras.filter(c=>c.cod===s.cod&&c.cod!=="DR").reduce((a,c)=>a+n(c.bs),0);
 const venta=day.ventas.filter(v=>v.cod===s.cod&&v.cod!=="DR").reduce((a,v)=>a+n(v.bs),0);
 const stock=n(s.inicioBs)+compra-venta;
-rows+=`<tr id="sr-${i}">
-<td><span class="cod-tag">${s.cod}</span></td>
-<td class="td-l" style="font-size:11px;color:var(--dim2)">${acc?.nombre||""}</td>
+const accBadgeClass='acc-'+(s.cod||'DR');
+rows+=`<tr id="sr-${i}" class="acc-row-${s.cod||''}">
+<td><span class="acc-badge ${accBadgeClass}">${s.cod}</span></td>
+<td class="td-l" style="font-size:12px;font-weight:600;color:#0f172a">${acc?.nombre||""}</td>
 <td><input class="ni-fmt" inputmode="decimal"
 value="${fmtInput(n(s.inicioBs))}" placeholder="0"
 oninput="let v=rawNum(this.value);updateInicio(${i},v)"
@@ -1080,7 +1152,7 @@ onblur="let v=rawNum(this.value);this.value=v?v.toLocaleString('es-CO',{minimumF
 <td class="s-pesos td-dim">${fmt(pesos,0)}</td>
 <td class="s-compra td-green">${fmt(compra,2)}</td>
 <td class="s-venta td-blue">${fmt(venta,2)}</td>
-<td class="s-stock td-cyan${stock<0?" neg":""}">${fmt(stock,2)}</td>
+<td><span class="${stock<0?'td-stock-neg':'td-stock-pos'}">${fmt(stock,2)}</span></td>
 </tr>`;
 });
 const totI=day.saldos.reduce((a,s)=>a+n(s.inicioBs),0);
@@ -1115,14 +1187,30 @@ function renderMovHTML(day,tipo){
 const isV=tipo==="ventas";
 const title=isV?"📤 VENTAS":"📥 COMPRAS";
 const tclass=isV?"t-blue":"t-green";
-const rows=day[tipo];
+const allRows=day[tipo];
+const filtro=cuentaFiltro[tipo]||'';
+const cuentasUsadas=[...new Set(allRows.filter(r=>r.cod&&n(r.bs)>0).map(r=>r.cod))];
+let filterBtns='';
+if(cuentasUsadas.length>1){
+  filterBtns='<div style="padding:6px 10px;display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid #e0e7ff">';
+  filterBtns+=`<button onclick="setCuentaFiltro('${tipo}','')" style="padding:3px 10px;border-radius:20px;border:1.5px solid ${!filtro?'#6366f1':'#e0e7ff'};background:${!filtro?'#6366f1':'#fff'};color:${!filtro?'#fff':'#475569'};font-size:10px;font-weight:700;cursor:pointer">Todas</button>`;
+  cuentasUsadas.forEach(cod=>{
+    const active=filtro===cod;
+    const accClass='acc-'+cod;
+    filterBtns+=`<button onclick="setCuentaFiltro('${tipo}','${cod}')" class="${active?'acc-'+cod:''}" style="padding:3px 10px;border-radius:20px;border:1.5px solid ${active?'#6366f1':'#e0e7ff'};font-size:10px;font-weight:700;cursor:pointer">${cod}</button>`;
+  });
+  filterBtns+='</div>';
+}
+const rows=filtro?allRows.map((r,i)=>({...r,_i:i})).filter(r=>r.cod===filtro):allRows.map((r,i)=>({...r,_i:i}));
 const totBs=rows.reduce((a,r)=>a+n(r.bs),0);
 const totCop=rows.reduce((a,r)=>a+n(r.bs)*n(r.tasa),0);
-let trows="";
-rows.forEach((r,i)=>{
+let trows='';
+rows.forEach((r)=>{
+const i=r._i!==undefined?r._i:rows.indexOf(r);
 const acc=state.accounts.find(a=>a.cod===r.cod);
-const cop=n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):"";
-trows+=`<tr id="mov-row-${tipo}-${i}" style="opacity:${r.done?'.5':'1'}">
+const cop=n(r.bs)&&n(r.tasa)?fmt(n(r.bs)*n(r.tasa),0):'';
+const rowBg=r._traspaso?'background:rgba(167,139,250,.08);border-left:2px solid #a78bfa':'';
+trows+=`<tr id="mov-row-${tipo}-${i}" class="acc-row-${r.cod||''}" style="opacity:${r.done?'.5':'1'};${rowBg}">
 <td><button class="del-btn" id="chk-${tipo}-${i}" onclick="toggleDone('${tipo}',${i})">${r.done?"✅":"☐"}</button></td>
 <td style="min-width:130px"><input class="ti" value="${r.nombre}" placeholder="Nombre"
 style="min-width:120px"
@@ -1148,6 +1236,7 @@ return `<div class="card" id="mov-${tipo}">
 <div class="card-header">
 <span class="card-title ${tclass}">${title}</span>
 </div>
+${filterBtns}
 <div class="tbl-wrap"><table>
 <thead><tr><th></th><th style="min-width:130px">NOMBRE</th><th>COD</th><th class="hide-mob">CUENTA</th><th>TASA</th><th>Bs</th><th class="hide-mob">PESOS</th><th></th></tr></thead>
 <tbody>${trows}</tbody>
@@ -1368,25 +1457,26 @@ ${clienteFiltro?`<button class="del-btn" style="font-size:18px" onclick="cliente
 }
 
 function buildFacturaText(nombre,ventas,compras,tVBs,tVCop,tCBs,tCCop,fecha){
-let txt="━━━━━━━━━━━━━━━━━━━━━━━\n";
-txt+=` ${nombre.toUpperCase()}\n ${fecha}\n`;
-txt+="━━━━━━━━━━━━━━━━━━━━━━━\n";
+const nums=['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+const sep='━━━━━━━━━━━━━━━━━━━━━';
+let txt=sep+'\n'+'💱 *CAMBIO DE BOLÍVARES*'+'\n'+sep+'\n';
+txt+='👤 *'+nombre.toUpperCase()+'*'+'\n'+'📅 '+fecha+'\n';
 if(ventas.length>0){
-txt+="\n 📤 VENTAS\n\n";
-ventas.forEach((v,i)=>{const cop=n(v.bs)*n(v.tasa);txt+=` ${i+1}. ${fmt(n(v.bs),2)} Bs\n Tasa: ${fmt(n(v.tasa),4)}\n Total: ${fmtCOP(cop)}\n\n`;});
-txt+=` Total Bs: ${fmt(tVBs,2)} | COP: ${fmtCOP(tVCop)}\n`;
+txt+=sep+'\n'+'📤 *VENTAS — Lo que me debe*'+'\n'+sep+'\n';
+ventas.forEach((v,i)=>{const cop=n(v.bs)*n(v.tasa);const num=nums[i]||(i+1)+'.';txt+=num+' Bs '+fmt(n(v.bs),2)+' × '+fmt(n(v.tasa),4)+' = *'+fmtCOP(cop)+'*\n';});
+txt+=sep+'\n'+'📊 Total Bs: *'+fmt(tVBs,2)+'*\n'+'💵 Total COP: *'+fmtCOP(tVCop)+'*\n';
 }
 if(compras.length>0){
-txt+="\n 📥 COMPRAS\n\n";
-compras.forEach((c,i)=>{const cop=n(c.bs)*n(c.tasa);txt+=` ${i+1}. ${fmt(n(c.bs),2)} Bs\n Tasa: ${fmt(n(c.tasa),4)}\n Total: ${fmtCOP(cop)}\n\n`;});
-txt+=` Total Bs: ${fmt(tCBs,2)} | COP: ${fmtCOP(tCCop)}\n`;
+txt+=sep+'\n'+'📥 *COMPRAS — Lo que le debo*'+'\n'+sep+'\n';
+compras.forEach((c,i)=>{const cop=n(c.bs)*n(c.tasa);const num=nums[i]||(i+1)+'.';txt+=num+' Bs '+fmt(n(c.bs),2)+' × '+fmt(n(c.tasa),4)+' = *'+fmtCOP(cop)+'*\n';});
+txt+=sep+'\n'+'📊 Total Bs: *'+fmt(tCBs,2)+'*\n'+'💵 Total COP: *'+fmtCOP(tCCop)+'*\n';
 }
 if(ventas.length>0&&compras.length>0){
 const nBS=tVBs-tCBs,nCOP=tVCop-tCCop;
-txt+="\n ⚖️ SALDO NETO\n";
-txt+=` ${nBS>=0?"Me debe":"Le debo"}: ${fmt(Math.abs(nBS),2)} Bs / ${fmtCOP(Math.abs(nCOP))}\n`;
+txt+=sep+'\n'+'⚖️ *'+(nBS>=0?'ME DEBE':'LE DEBO')+'*\n';
+txt+='🔹 Bs: *'+fmt(Math.abs(nBS),2)+'*\n'+'🔹 COP: *'+fmtCOP(Math.abs(nCOP))+'*\n';
 }
-txt+="━━━━━━━━━━━━━━━━━━━━━━━";
+txt+=sep;
 return txt;
 }
 function copyFactura(text){
@@ -1562,6 +1652,95 @@ try{
 showToast("Excel descargado ✓","ok");
 }
 
+
+// ══ SIDEBAR ════════════════════════════════════════════════
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const btn=document.getElementById('collapse-btn');
+  sb.classList.toggle('collapsed');
+  btn.textContent=sb.classList.contains('collapsed')?'▶':'◀';
+}
+
+// ══ FILTRO POR CUENTA ════════════════════════════════════════
+let cuentaFiltro={ventas:'',compras:''};
+function setCuentaFiltro(tipo,cod){
+  cuentaFiltro[tipo]=cuentaFiltro[tipo]===cod?'':cod;
+  const day=state.days[state.currentDay];
+  const el=document.getElementById('mov-'+tipo);
+  if(el) el.outerHTML=renderMovHTML(day,tipo);
+}
+
+// ══ COPIAR PARA EXCEL ══════════════════════════════════════
+function copiarParaExcel(nombre){
+  if(!nombre) return;
+  const day=state.days[state.currentDay];
+  const fmtNum=(val,dec)=>Number(val).toLocaleString('es-CO',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  let rows=[];
+  day.ventas.forEach((v,i)=>{
+    if(v.nombre&&v.nombre.toLowerCase()===nombre.toLowerCase()&&n(v.bs)>0){
+      rows.push('bs\t'+fmtNum(n(v.bs),2)+'\t'+fmtNum(n(v.tasa),4));
+      day.ventas[i].done=true;
+      const row=document.getElementById('mov-row-ventas-'+i);
+      const cb=document.getElementById('chk-ventas-'+i);
+      if(row) row.style.opacity='0.5';
+      if(cb) cb.textContent='✅';
+    }
+  });
+  day.compras.forEach((c,i)=>{
+    if(c.nombre&&c.nombre.toLowerCase()===nombre.toLowerCase()&&n(c.bs)>0){
+      rows.push('bs\t'+fmtNum(n(c.bs),2)+'\t'+fmtNum(n(c.tasa),4));
+      day.compras[i].done=true;
+      const row=document.getElementById('mov-row-compras-'+i);
+      const cb=document.getElementById('chk-compras-'+i);
+      if(row) row.style.opacity='0.5';
+      if(cb) cb.textContent='✅';
+    }
+  });
+  saveLocal();
+  const text=rows.join('\n');
+  navigator.clipboard.writeText(text).then(()=>showToast('✅ Copiado y marcado')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
+    showToast('✅ Copiado y marcado');
+  });
+}
+
+// ══ TRASPASO SIMPLE ═════════════════════════════════════════
+function ejecutarTraspasoSimple(){
+  const origen=document.getElementById('tr-origen').value;
+  const destino=document.getElementById('tr-destino').value;
+  const bs=rawNum(document.getElementById('tr-bs').value)||0;
+  const com=rawNum(document.getElementById('tr-com').value)||0;
+  if(!origen){showToast('Selecciona cuenta origen','err');return;}
+  if(!destino){showToast('Selecciona cuenta destino','err');return;}
+  if(origen===destino){showToast('Origen y destino iguales','err');return;}
+  if(!bs||bs<=0){showToast('Ingresa el monto en Bs','err');return;}
+  const day=state.days[state.currentDay];
+  const comBs=bs*com/100;
+  const bsNeto=bs-comBs;
+  day.ventas.push({nombre:'TRASPASO→'+destino,cod:origen,tasa:0,bs:bs+comBs,done:false,_traspaso:true});
+  day.compras.push({nombre:'TRASPASO←'+origen,cod:destino,tasa:0,bs:bsNeto,done:false,_traspaso:true});
+  saveLocal();
+  if(state.scriptUrl) syncSave();
+  document.getElementById('tr-bs').value='';
+  document.getElementById('tr-com').value='';
+  document.getElementById('tr-origen').value='';
+  document.getElementById('tr-destino').value='';
+  render();
+  showToast('✅ Traspaso registrado','ok');
+}
+
+// ══ ELIMINAR DÍA ════════════════════════════════════════════
+function deleteDay(idx){
+  if(state.days.length<=1){showToast('No puedes eliminar el único día','err');return;}
+  if(!confirm('¿Eliminar este día y todos sus datos?')) return;
+  state.days.splice(idx,1);
+  if(state.currentDay>=state.days.length) state.currentDay=state.days.length-1;
+  saveLocal();
+  if(state.scriptUrl) syncSave();
+  render();
+  showToast('Día eliminado','ok');
+}
 // ══ INIT ═══════════════════════════════════════════════════
 async function init(){
 loadLocal();
