@@ -1476,6 +1476,7 @@ body=`<div class="factura-wrap">
 <div class="fac-header"><div class="fac-name">${clienteFiltro.toUpperCase()}</div><div class="fac-date">${day.label}</div></div>
 ${vs}${cs}${neto}
 <button class="copy-btn" onclick="copyFactura(\`${copyText.replace(/`/g,"'")}\`)">📋 Copiar resumen para WhatsApp</button>
+<button class="copy-btn" style="background:linear-gradient(135deg,#0369a1,#0ea5e9);margin-top:6px" onclick="copiarParaExcel(document.querySelector('.search-inp').value)">📊 Copiar para Excel</button>
 </div>`;
 } else {
 body=`<div class="empty-msg">Escribe el nombre para ver sus transacciones</div>`;
@@ -1757,10 +1758,13 @@ function ejecutarTraspasoSimple(){
   if(origen===destino){showToast('Origen y destino iguales','err');return;}
   if(!bs||bs<=0){showToast('Ingresa el monto en Bs','err');return;}
   const day=state.days[state.currentDay];
+  const res=calcResumen(day);
+  const tasa=res.promCompra||0;
   const comBs=bs*com/100;
-  const bsNeto=bs-comBs;
-  day.ventas.push({nombre:'TRASPASO→'+destino,cod:origen,tasa:0,bs:bs+comBs,done:false,_traspaso:true});
-  day.compras.push({nombre:'TRASPASO←'+origen,cod:destino,tasa:0,bs:bsNeto,done:false,_traspaso:true});
+  // Origen: sale bs + comision
+  // Destino: entra exactamente bs (sin descontar comision)
+  day.ventas.push({nombre:'TRASPASO→'+destino,cod:origen,tasa:tasa,bs:bs+comBs,done:false,_traspaso:true});
+  day.compras.push({nombre:'TRASPASO←'+origen,cod:destino,tasa:tasa,bs:bs,done:false,_traspaso:true});
   saveLocal();
   if(state.scriptUrl) syncSave();
   document.getElementById('tr-bs').value='';
@@ -1787,6 +1791,11 @@ async function init(){
 loadLocal();
 if(state.days.length===0) state.days=[emptyDay()];
 render();
+// Always start sidebar expanded
+const sb=document.getElementById('sidebar');
+if(sb) sb.classList.remove('collapsed');
+const btn=document.getElementById('collapse-btn');
+if(btn) btn.textContent='◀';
 if(state.scriptUrl){
 setSyncStatus("loading","Sincronizando...");
 await syncLoad();
