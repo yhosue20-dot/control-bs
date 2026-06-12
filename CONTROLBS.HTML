@@ -1411,6 +1411,7 @@ return `<div class="factura-wrap">
 <div class="fac-header"><div class="fac-name">${clienteFiltro.toUpperCase()}</div><div class="fac-date">${day.label}</div></div>
 ${vs}${cs}${neto}
 <button class="copy-btn" onclick="copyFactura(\`${copyText.replace(/\`/g,"'")}\`)">📋 Copiar resumen para WhatsApp</button>
+<button class="copy-btn" style="background:linear-gradient(135deg,#0369a1,#0ea5e9);margin-top:6px" onclick="copiarParaExcel(clienteFiltro)">📊 Copiar para Excel</button>
 </div>`;
 }
 
