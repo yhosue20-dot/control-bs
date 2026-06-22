@@ -613,8 +613,11 @@ tfoot td { background:linear-gradient(135deg,#eef2ff,#f5f3ff) !important; color:
 
 <div class="sidebar-section-title">DÍAS DEL MES</div>
 <div style="padding:4px 8px 8px">
-  <select id="day-select" class="ni" style="width:100%;padding:6px 8px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer" onchange="selectDayFromDropdown(this.value)">
-  </select>
+  <div style="display:flex;gap:4px;align-items:center">
+    <select id="day-select" class="ni" style="flex:1;padding:6px 8px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer" onchange="selectDayFromDropdown(this.value)">
+    </select>
+    <button onclick="editDayLabel()" title="Editar nombre" style="padding:6px 8px;background:rgba(129,140,248,.2);border:1px solid rgba(129,140,248,.3);color:#a5b4fc;border-radius:8px;font-size:14px;cursor:pointer">✏️</button>
+  </div>
   <div style="display:flex;gap:4px;margin-top:6px">
     <button onclick="addDay()" style="flex:1;padding:5px;background:rgba(129,140,248,.2);border:1px solid rgba(129,140,248,.3);color:#a5b4fc;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">+ Nuevo</button>
     <button onclick="deleteCurrDay()" style="flex:1;padding:5px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">× Borrar</button>
@@ -1706,6 +1709,17 @@ showToast("Excel descargado ✓","ok");
 
 // ══ SIDEBAR ════════════════════════════════════════════════
 
+
+function editDayLabel(){
+  const day = state.days[state.currentDay];
+  const nuevo = prompt('Nuevo nombre para este día:', day.label||'');
+  if(nuevo !== null && nuevo.trim() !== ''){
+    day.label = nuevo.trim();
+    saveLocal();
+    renderDayDropdown();
+    showToast('✅ Nombre actualizado','ok');
+  }
+}
 function renderDayDropdown(){
   const sel = document.getElementById('day-select');
   if(!sel) return;
