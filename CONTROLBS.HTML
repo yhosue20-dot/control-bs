@@ -612,7 +612,15 @@ tfoot td { background:linear-gradient(135deg,#eef2ff,#f5f3ff) !important; color:
 </div>
 
 <div class="sidebar-section-title">DÍAS DEL MES</div>
-<div id="day-list"></div>
+<div style="padding:4px 8px 8px">
+  <select id="day-select" class="ni" style="width:100%;padding:6px 8px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer" onchange="selectDayFromDropdown(this.value)">
+  </select>
+  <div style="display:flex;gap:4px;margin-top:6px">
+    <button onclick="addDay()" style="flex:1;padding:5px;background:rgba(129,140,248,.2);border:1px solid rgba(129,140,248,.3);color:#a5b4fc;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">+ Nuevo</button>
+    <button onclick="deleteCurrDay()" style="flex:1;padding:5px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">× Borrar</button>
+  </div>
+</div>
+<div id="day-list" style="display:none"></div>
 
 <div id="sidebar-nav">
 <button class="nav-btn active" onclick="setView('dia')" id="nav-dia">
@@ -1096,7 +1104,7 @@ function setMobActive(el){
 document.querySelectorAll(".mob-btn").forEach(b=>b.classList.remove("active"));
 el.classList.add("active");
 }
-function render(){ renderDayList(); renderPage(); }
+function render(){ renderDayList(); renderPage(); renderDayDropdown(); }
 
 function renderDayList(){
 const container=document.getElementById("day-list");
@@ -1697,6 +1705,32 @@ showToast("Excel descargado ✓","ok");
 
 
 // ══ SIDEBAR ════════════════════════════════════════════════
+
+function renderDayDropdown(){
+  const sel = document.getElementById('day-select');
+  if(!sel) return;
+  sel.innerHTML = state.days.map((d,i)=>`<option value="${i}" ${i===state.currentDay?'selected':''}>${d.label||('Día '+(i+1).toString().padStart(2,'0'))}</option>`).join('');
+}
+
+function selectDayFromDropdown(idx){
+  state.currentDay = parseInt(idx);
+  clienteFiltro = '';
+  saveLocal();
+  renderPage();
+  renderDayDropdown();
+}
+
+function deleteCurrDay(){
+  if(state.days.length<=1){showToast('No puedes eliminar el único día','err');return;}
+  if(!confirm('¿Eliminar este día?')) return;
+  state.days.splice(state.currentDay,1);
+  if(state.currentDay>=state.days.length) state.currentDay=state.days.length-1;
+  saveLocal();
+  if(state.scriptUrl) syncSave();
+  render();
+  renderDayDropdown();
+  showToast('Día eliminado','ok');
+}
 function toggleSidebar(){
   const sb=document.getElementById('sidebar');
   const btn=document.getElementById('collapse-btn');
@@ -1798,10 +1832,23 @@ if(sb) sb.classList.remove('collapsed');
 const btn=document.getElementById('collapse-btn');
 if(btn) btn.textContent='◀';
 if(state.scriptUrl){
-setSyncStatus("loading","Sincronizando...");
-await syncLoad();
+  if(state.days.length>0 && (state.days[0].ventas?.length>0 || state.days[0].compras?.length>0)){
+    // Have local data - save it to Sheets, don't overwrite with Sheets
+    setSyncStatus("loading","Guardando...");
+    try{
+      const res=await fetch(state.scriptUrl,{method:"POST",
+        body:JSON.stringify({action:"save",state:{accounts:state.accounts,days:state.days,currentDay:state.currentDay}})});
+      const data=await res.json();
+      if(data.ok) setSyncStatus("ok","Guardado ✓");
+      else setSyncStatus("error","Error");
+    }catch(e){ setSyncStatus("error","Sin conexión"); }
+  } else {
+    // No local data - load from Sheets
+    setSyncStatus("loading","Cargando...");
+    await syncLoad();
+  }
 } else {
-setSyncStatus("","Sin configurar");
+  setSyncStatus("","Sin configurar");
 }
 }
 init();
