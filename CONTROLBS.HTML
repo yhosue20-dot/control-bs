@@ -1650,6 +1650,88 @@ for(let R=range.s.r;R<=range.e.r;R++){
 }
 XLSX.utils.book_append_sheet(wb,ws,lbl.replace(/[/\\?*[\]:]/g,'-').slice(0,31));
 });
+// Por cliente
+const clientMap={};
+state.days.forEach((day,di)=>{
+const lbl=day.label||('Día '+(di+1));
+day.ventas.filter(v=>v.nombre&&n(v.bs)>0).forEach(v=>{
+  if(!clientMap[v.nombre]) clientMap[v.nombre]={ventas:[],compras:[]};
+  const acc=state.accounts.find(a=>a.cod===v.cod);
+  clientMap[v.nombre].ventas.push([lbl,n(v.bs),n(v.tasa),n(v.bs)*n(v.tasa),acc?.nombre||v.cod]);
+});
+day.compras.filter(c=>c.nombre&&n(c.bs)>0).forEach(c=>{
+  if(!clientMap[c.nombre]) clientMap[c.nombre]={ventas:[],compras:[]};
+  const acc=state.accounts.find(a=>a.cod===c.cod);
+  clientMap[c.nombre].compras.push([lbl,n(c.bs),n(c.tasa),n(c.bs)*n(c.tasa),acc?.nombre||c.cod]);
+});
+});
+Object.entries(clientMap).forEach(([nombre,data])=>{
+const cRows=[[('RESUMEN: '+nombre.toUpperCase())],[]];
+if(data.ventas.length>0){
+  cRows.push(['VENTAS — Lo que me debe']);
+  cRows.push(['DIA','Bs','TASA','TOTAL COP','CUENTA']);
+  data.ventas.forEach(r=>cRows.push(r));
+  cRows.push(['TOTAL',data.ventas.reduce((a,r)=>a+r[1],0),'',data.ventas.reduce((a,r)=>a+r[3],0),'']);
+  cRows.push([]);
+}
+if(data.compras.length>0){
+  cRows.push(['COMPRAS — Lo que le debo']);
+  cRows.push(['DIA','Bs','TASA','TOTAL COP','CUENTA']);
+  data.compras.forEach(r=>cRows.push(r));
+  cRows.push(['TOTAL',data.compras.reduce((a,r)=>a+r[1],0),'',data.compras.reduce((a,r)=>a+r[3],0),'']);
+  cRows.push([]);
+}
+if(data.ventas.length>0&&data.compras.length>0){
+  const tVB=data.ventas.reduce((a,r)=>a+r[1],0),tVC=data.ventas.reduce((a,r)=>a+r[3],0);
+  const tCB=data.compras.reduce((a,r)=>a+r[1],0),tCC=data.compras.reduce((a,r)=>a+r[3],0);
+  cRows.push(['SALDO NETO']);
+  cRows.push([tVB-tCB>=0?'Me debe (Bs)':'Le debo (Bs)',Math.abs(tVB-tCB)]);
+  cRows.push([tVC-tCC>=0?'Me debe (COP)':'Le debo (COP)',Math.abs(tVC-tCC)]);
+}
+const wsC=XLSX.utils.aoa_to_sheet(cRows);
+wsC['!cols']=[{wch:18},{wch:16},{wch:10},{wch:16},{wch:20}];
+const rC=XLSX.utils.decode_range(wsC['!ref']);
+for(let R=rC.s.r;R<=rC.e.r;R++){
+  for(let C=1;C<=3;C+=2){
+    const addr=XLSX.utils.encode_cell({r:R,c:C});
+    if(wsC[addr]&&typeof wsC[addr].v==='number') wsC[addr].z='#,##0.00';
+  }
+}
+XLSX.utils.book_append_sheet(wb,wsC,nombre.replace(/[/\\?*[\]:]/g,'-').slice(0,31));
+});
+// Resumen General
+const sRows=[['RESUMEN GENERAL DEL MES'],[]];
+sRows.push(['DIA','INICIO Bs','Bs COMP','COP COMP','Bs VEND','COP VEND','PROM COMPRA','PROM VENTA','UTILIDAD','QUEDA Bs','VALOR PESOS']);
+let tBC=0,tCC=0,tBV=0,tCV=0,tU=0;
+state.days.forEach((day,di)=>{
+const r=calcResumen(day);
+tBC+=r.bsCompReal;tCC+=r.copComp;tBV+=r.bsVendReal;tCV+=r.copVend;tU+=r.utilidad;
+sRows.push([day.label||('Día '+(di+1)),r.inicioBs,r.bsCompReal,r.copComp,r.bsVendReal,r.copVend,r.promCompra,r.promVenta,r.utilidad,r.quedaBs,r.valorPesos]);
+});
+sRows.push([]);
+sRows.push(['TOTALES','',tBC,tCC,tBV,tCV,'','',tU,'','']);
+const wsS=XLSX.utils.aoa_to_sheet(sRows);
+wsS['!cols']=Array(11).fill({wch:16});
+const rS=XLSX.utils.decode_range(wsS['!ref']);
+for(let R=rS.s.r;R<=rS.e.r;R++){
+  for(let C=1;C<=10;C++){
+    const addr=XLSX.utils.encode_cell({r:R,c:C});
+    if(wsS[addr]&&typeof wsS[addr].v==='number') wsS[addr].z=C>=6&&C<=7?'#,##0.0000':'#,##0.00';
+  }
+}
+XLSX.utils.book_append_sheet(wb,wsS,'Resumen General');
+try{
+  XLSX.writeFile(wb,('Control_Bs_'+new Date().toISOString().slice(0,10)+'.xlsx'));
+}catch(e){
+  const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  const blob=new Blob([wbout],{type:'application/octet-stream'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='Control_Bs_'+new Date().toISOString().slice(0,10)+'.xlsx';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+}
+}
 function editDayLabel(){
   const day = state.days[state.currentDay];
   const nuevo = prompt('Nuevo nombre para este día:', day.label||'');
