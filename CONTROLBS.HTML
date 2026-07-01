@@ -854,8 +854,15 @@ clearTimeout(syncTimer);
 setSyncStatus("loading","Guardando...");
 syncTimer=setTimeout(async()=>{
 try{
-const res=await fetch(state.scriptUrl,{method:"POST",
-body:JSON.stringify({action:"save",state:{accounts:state.accounts,days:state.days,currentDay:state.currentDay}})});
+// Save accounts + metadata in row 1, each day in its own row
+const payload={
+  action:"saveChunked",
+  accounts:state.accounts,
+  currentDay:state.currentDay,
+  totalDays:state.days.length,
+  days:state.days.map((d,i)=>({idx:i,data:JSON.stringify(d)}))
+};
+const res=await fetch(state.scriptUrl,{method:"POST",body:JSON.stringify(payload)});
 const data=await res.json();
 if(data.ok) setSyncStatus("ok","Guardado ✓");
 else setSyncStatus("error","Error al guardar");
@@ -1596,120 +1603,53 @@ function exportExcel(){
 const wb=XLSX.utils.book_new();
 state.days.forEach((day,di)=>{
 const r=calcResumen(day);
-const lbl=day.label||`Día ${String(di+1).padStart(2,"0")}`;
-const rows=[[`CONTROL DIARIO Bs — ${lbl}`],[]];
-rows.push(["SALDOS","","","","","",""]);
-rows.push(["COD","CUENTA","INICIO Bs","PROMEDIO","PESOS","COMPRA","VENTA","STOCK"]);
+const lbl=day.label||('Día '+String(di+1).padStart(2,'0'));
+const rows=[];
+rows.push(['CONTROL DIARIO Bs — '+lbl]);
+rows.push([]);
+rows.push(['SALDOS','','','','','','','']);
+rows.push(['COD','CUENTA','INICIO Bs','PROMEDIO','PESOS','COMPRA','VENTA','STOCK']);
 day.saldos.forEach(s=>{
-const acc=state.accounts.find(a=>a.cod===s.cod);
-const comp=day.compras.filter(c=>c.cod===s.cod&&c.cod!=="DR").reduce((a,c)=>a+n(c.bs),0);
-const vent=day.ventas.filter(v=>v.cod===s.cod&&v.cod!=="DR").reduce((a,v)=>a+n(v.bs),0);
-rows.push([s.cod,acc?.nombre||"",n(s.inicioBs),n(s.promedio),n(s.inicioBs)*n(s.promedio),comp,vent,n(s.inicioBs)+comp-vent]);
+  const acc=state.accounts.find(a=>a.cod===s.cod);
+  const comp=day.compras.filter(c=>c.cod===s.cod&&c.cod!=='DR').reduce((a,c)=>a+n(c.bs),0);
+  const vent=day.ventas.filter(v=>v.cod===s.cod&&v.cod!=='DR').reduce((a,v)=>a+n(v.bs),0);
+  rows.push([s.cod,acc?.nombre||'',n(s.inicioBs),n(s.promedio)||0,n(s.inicioBs)*(n(s.promedio)||0),comp,vent,n(s.inicioBs)+comp-vent]);
 });
 rows.push([]);
-rows.push(["VENTAS","","","","","","","COMPRAS","","","","",""]);
-rows.push(["NOMBRE","COD","CUENTA","TASA","Bs","PESOS","","NOMBRE","COD","CUENTA","TASA","Bs","PESOS"]);
-const vF=day.ventas.filter(v=>v.bs||v.nombre);
-const cF=day.compras.filter(c=>c.bs||c.nombre);
-const mx=Math.max(vF.length,cF.length,1);
-for(let i=0;i<mx;i++){
-const v=vF[i]||{},c=cF[i]||{};
-const vA=state.accounts.find(a=>a.cod===v.cod);
-const cA=state.accounts.find(a=>a.cod===c.cod);
-rows.push([v.nombre||"",v.cod||"",vA?.nombre||"",n(v.tasa)||"",n(v.bs)||"",n(v.bs)&&n(v.tasa)?n(v.bs)*n(v.tasa):"",
-"",c.nombre||"",c.cod||"",cA?.nombre||"",n(c.tasa)||"",n(c.bs)||"",n(c.bs)&&n(c.tasa)?n(c.bs)*n(c.tasa):""]);
-}
-rows.push(["TOTAL","","","",vF.reduce((a,v)=>a+n(v.bs),0),vF.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0),
-"","TOTAL","","","",cF.reduce((a,c)=>a+n(c.bs),0),cF.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0)]);
+rows.push(['VENTAS — Lo que me deben','','','','','']);
+rows.push(['NOMBRE','COD','CUENTA','TASA','Bs','PESOS']);
+const vF=day.ventas.filter(v=>n(v.bs)>0&&v.nombre);
+vF.forEach(v=>{const vA=state.accounts.find(a=>a.cod===v.cod);rows.push([v.nombre||'',v.cod||'',vA?.nombre||'',n(v.tasa),n(v.bs),n(v.bs)*n(v.tasa)]);});
+rows.push(['TOTAL','','','',vF.reduce((a,v)=>a+n(v.bs),0),vF.reduce((a,v)=>a+n(v.bs)*n(v.tasa),0)]);
 rows.push([]);
-rows.push(["RESUMEN DEL DÍA"]);
-[["INICIO EN Bs",r.inicioBs],["INICIO EN PESOS",r.inicioPesos],
-["Bs COMPRADOS",r.bsCompReal],["Bs COMPRADOS EN PESOS",r.copComp],
-["Bs VENDIDOS",r.bsVendReal],["Bs VENDIDOS EN PESOS",r.copVend],
-["PROMEDIO COMPRA REAL",r.promCompra],["PROMEDIO VENTA",r.promVenta],
-["UTILIDAD DIRECTA",r.utilidadDirecta],["UTILIDAD TOTAL",r.utilidad],
-["QUEDA EN Bs",r.quedaBs],["VALOR EN PESOS",r.valorPesos]
-].forEach(([l,v])=>rows.push([l,v]));
+rows.push(['COMPRAS — Lo que les debo','','','','','']);
+rows.push(['NOMBRE','COD','CUENTA','TASA','Bs','PESOS']);
+const cF=day.compras.filter(c=>n(c.bs)>0&&c.nombre);
+cF.forEach(c=>{const cA=state.accounts.find(a=>a.cod===c.cod);rows.push([c.nombre||'',c.cod||'',cA?.nombre||'',n(c.tasa),n(c.bs),n(c.bs)*n(c.tasa)]);});
+rows.push(['TOTAL','','','',cF.reduce((a,c)=>a+n(c.bs),0),cF.reduce((a,c)=>a+n(c.bs)*n(c.tasa),0)]);
+rows.push([]);
+rows.push(['RESUMEN DEL DÍA','']);
+[['INICIO EN Bs',r.inicioBs],['INICIO EN PESOS',r.inicioPesos],
+['Bs COMPRADOS',r.bsCompReal],['Bs COMPRADOS EN PESOS',r.copComp],
+['Bs VENDIDOS',r.bsVendReal],['Bs VENDIDOS EN PESOS',r.copVend],
+['PROMEDIO COMPRA REAL',r.promCompra],['PROMEDIO VENTA',r.promVenta],
+['UTILIDAD DIRECTA',r.utilidadDirecta],['UTILIDAD TOTAL',r.utilidad],
+['QUEDA EN Bs',r.quedaBs],['VALOR EN PESOS',r.valorPesos]
+].forEach(function(pair){rows.push(pair);});
 const ws=XLSX.utils.aoa_to_sheet(rows);
-ws["!cols"]=Array(14).fill({wch:16});
-XLSX.utils.book_append_sheet(wb,ws,lbl.replace(/[\/\?*\[\]:]/g,'-').slice(0,31));
-});
-// Por cliente
-const clientMap={};
-state.days.forEach((day,di)=>{
-const lbl=day.label||`Día ${di+1}`;
-day.ventas.filter(v=>v.nombre&&n(v.bs)>0).forEach(v=>{
-if(!clientMap[v.nombre]) clientMap[v.nombre]={ventas:[],compras:[]};
-const acc=state.accounts.find(a=>a.cod===v.cod);
-clientMap[v.nombre].ventas.push([lbl,n(v.bs),n(v.tasa),n(v.bs)*n(v.tasa),acc?.nombre||v.cod]);
-});
-day.compras.filter(c=>c.nombre&&n(c.bs)>0).forEach(c=>{
-if(!clientMap[c.nombre]) clientMap[c.nombre]={ventas:[],compras:[]};
-const acc=state.accounts.find(a=>a.cod===c.cod);
-clientMap[c.nombre].compras.push([lbl,n(c.bs),n(c.tasa),n(c.bs)*n(c.tasa),acc?.nombre||c.cod]);
-});
-});
-Object.entries(clientMap).forEach(([nombre,data])=>{
-const cRows=[[`RESUMEN: ${nombre.toUpperCase()}`],[]];
-if(data.ventas.length>0){
-cRows.push(["VENTAS — Lo que me debe"]);
-cRows.push(["DIA","Bs","TASA","TOTAL COP","CUENTA"]);
-data.ventas.forEach(r=>cRows.push(r));
-cRows.push(["TOTAL",data.ventas.reduce((a,r)=>a+r[1],0),"",data.ventas.reduce((a,r)=>a+r[3],0),""]);
-cRows.push([]);
+ws['!cols']=[{wch:22},{wch:20},{wch:16},{wch:10},{wch:16},{wch:16},{wch:16},{wch:14}];
+// Format number cells with thousand separators
+const range=XLSX.utils.decode_range(ws['!ref']);
+for(let R=range.s.r;R<=range.e.r;R++){
+  for(let C=0;C<=7;C++){
+    const addr=XLSX.utils.encode_cell({r:R,c:C});
+    if(ws[addr]&&typeof ws[addr].v==='number'){
+      ws[addr].z=C===3?'#,##0.0000':'#,##0.00';
+    }
+  }
 }
-if(data.compras.length>0){
-cRows.push(["COMPRAS — Lo que le debo"]);
-cRows.push(["DIA","Bs","TASA","TOTAL COP","CUENTA"]);
-data.compras.forEach(r=>cRows.push(r));
-cRows.push(["TOTAL",data.compras.reduce((a,r)=>a+r[1],0),"",data.compras.reduce((a,r)=>a+r[3],0),""]);
-cRows.push([]);
-}
-if(data.ventas.length>0&&data.compras.length>0){
-const tVB=data.ventas.reduce((a,r)=>a+r[1],0),tVC=data.ventas.reduce((a,r)=>a+r[3],0);
-const tCB=data.compras.reduce((a,r)=>a+r[1],0),tCC=data.compras.reduce((a,r)=>a+r[3],0);
-cRows.push(["SALDO NETO"]);
-cRows.push([tVB-tCB>=0?"Me debe (Bs)":"Le debo (Bs)",Math.abs(tVB-tCB)]);
-cRows.push([tVC-tCC>=0?"Me debe (COP)":"Le debo (COP)",Math.abs(tVC-tCC)]);
-}
-const wsC=XLSX.utils.aoa_to_sheet(cRows);
-wsC["!cols"]=Array(5).fill({wch:18});
-XLSX.utils.book_append_sheet(wb,wsC,nombre.replace(/[\/\\?*\[\]:]/g,'-').slice(0,31));
+XLSX.utils.book_append_sheet(wb,ws,lbl.replace(/[/\\?*[\]:]/g,'-').slice(0,31));
 });
-// Resumen General
-const sRows=[["RESUMEN GENERAL DEL MES"],[]];
-sRows.push(["DIA","INICIO Bs","Bs COMP","COP COMP","Bs VEND","COP VEND","PROM COMPRA","PROM VENTA","UTILIDAD","QUEDA Bs","VALOR PESOS"]);
-let tBC=0,tCC=0,tBV=0,tCV=0,tU=0;
-state.days.forEach((day,di)=>{
-const r=calcResumen(day);
-tBC+=r.bsCompReal;tCC+=r.copComp;tBV+=r.bsVendReal;tCV+=r.copVend;tU+=r.utilidad;
-sRows.push([day.label||`Día ${di+1}`,r.inicioBs,r.bsCompReal,r.copComp,r.bsVendReal,r.copVend,r.promCompra,r.promVenta,r.utilidad,r.quedaBs,r.valorPesos]);
-});
-sRows.push([]);
-sRows.push(["TOTALES","",tBC,tCC,tBV,tCV,"","",tU,"",""]);
-const wsS=XLSX.utils.aoa_to_sheet(sRows);
-wsS["!cols"]=Array(11).fill({wch:16});
-XLSX.utils.book_append_sheet(wb,wsS,"Resumen General");
-try{
-  XLSX.writeFile(wb,`Control_Bs_${new Date().toISOString().slice(0,10)}.xlsx`);
-}catch(e){
-  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-  const blob = new Blob([wbout], {type:'application/octet-stream'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `Control_Bs_${new Date().toISOString().slice(0,10)}.xlsx`;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
-}
-showToast("Excel descargado ✓","ok");
-}
-
-
-// ══ SIDEBAR ════════════════════════════════════════════════
-
-
 function editDayLabel(){
   const day = state.days[state.currentDay];
   const nuevo = prompt('Nuevo nombre para este día:', day.label||'');
